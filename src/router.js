@@ -1,81 +1,52 @@
-import { AuthService } from './services/auth-service.js';
-import { auth } from './services/firebase-config.js';
+import { AuthService } from './services/authservice.js';
 
 const routes = {
-    '/': () => import('./views/mapview.js'),
-    '/login': () => import('./views/loginview.js'),
-    '/dashboard': () => import('./views/dashboardview.js'),
-    '/register': () => import('./views/RegisterView.js'),
-};
-
-// Função auxiliar para garantir que o Firebase inicializou
-const getCurrentUser = () => {
-    return new Promise((resolve, reject) => {
-        const unsubscribe = auth.onAuthStateChanged(user => {
-            unsubscribe();
-            resolve(user);
-        }, reject);
-    });
+    '/': { view: () => import('./views/mapview.js'), private: true },
+    '/login': { view: () => import('./views/loginview.js'), private: false },
+    '/register': { view: () => import('./views/registerview.js'), private: false },
+    '/dashboard': { view: () => import('./views/dashboardview.js'), private: true },
+    '/create-hangar': { view: () => import('./views/createhangarview.js'), private: true },
+    '/hangares': { view: () => import('./views/hangarmanagementview.js'), private: true },
 };
 
 export async function router() {
     const path = window.location.pathname;
-    const appViewport = document.getElementById('app-viewport');
-    
-    if (!appViewport) return;
-    appViewport.innerHTML = '<div style="color:white;text-align:center;margin-top:50px;">Verificando conexão...</div>';
+    const app = document.getElementById('app-viewport');
 
-    // CRUCIAL: Aguarda o Firebase responder quem é o usuário
-    let user = auth.currentUser;
-    if (!user) {
-        user = await getCurrentUser();
+    if (!app) return;
+
+    const route = routes[path] || routes['/'];
+
+    // 🔐 Proteção de rota
+    if (route.private && !AuthService.isAuthenticated()) {
+        return window.navigate('/login');
     }
 
-    // Redirecionamento lógico
-    if (!user && path !== '/login') {
-        window.history.pushState({}, "", "/login");
-        return router();
+    // 🔐 Evita acessar login logado
+    if (path === '/login' && AuthService.isAuthenticated()) {
+        return window.navigate('/');
     }
 
-    // Se o usuário já estiver logado e tentar ir para o login, mandamos para a home/dashboard
-    if (user && path === '/login') {
-        const role = await AuthService.getUserRole(user.uid);
-        const destination = (role === 'admin_hangar' || role === 'admin_master') ? '/dashboard' : '/';
-        window.history.pushState({}, "", destination);
-        return router();
-    }
-
-    const loader = routes[path] || routes['/'];
-    
     try {
-        const module = await loader();
+        const module = await route.view();
         const View = module.default;
 
-        if (!View || typeof View.render !== 'function') {
-            throw new Error("A View não exportou um objeto válido com render().");
+        const user = AuthService.getUser();
+
+        // 🔒 Controle de role
+        if (path === '/dashboard' && !user?.permissions?.canEditReservations) {
+            return window.navigate('/');
         }
 
-        // Verificação de permissão para o Dashboard
-        if (path === '/dashboard' && user) {
-            const role = await AuthService.getUserRole(user.uid);
-            if (role !== 'admin_hangar' && role !== 'admin_master') {
-                console.warn("Acesso negado: Usuário não é admin.");
-                window.history.pushState({}, "", "/");
-                return router();
-            }
+        app.innerHTML = await View.render();
+
+        if (View.after_render) {
+            await View.after_render();
         }
 
-        appViewport.innerHTML = await View.render();
-        if (View.after_render) await View.after_render();
-
-    } catch (error) {
-        console.error("Erro de Roteamento:", error);
-        appViewport.innerHTML = `
-            <div style="color:white; text-align:center; padding:50px;">
-                <h2 style="color:#ff4d4d;">Erro de Carregamento</h2>
-                <code style="background:#222; padding:10px; display:block; margin-top:10px;">${error.message}</code>
-            </div>
-        `;
+    } catch (err) {
+        console.error("Router error:", err);
+        app.innerHTML = "<h1>Erro ao carregar página</h1>";
     }
 }
 

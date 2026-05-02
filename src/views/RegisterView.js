@@ -1,67 +1,59 @@
-import { AuthService } from '../services/auth-service.js';
+import { AuthService } from '../services/authservice.js';
 
 const RegisterView = {
-    render: async () => {
-        return `
-            <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #121212; padding: 20px;">
-                <div style="background: #1e1e1e; padding: 40px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); width: 100%; max-width: 450px; border: 1px solid #333;">
-                    <h2 style="color: #4ecca3; text-align: center; margin-bottom: 25px; font-family: sans-serif;">Criar Nova Conta</h2>
-                    
-                    <form id="register-form">
-                        <div style="margin-bottom: 15px;">
-                            <label style="color: #bbb; display: block; margin-bottom: 5px;">E-mail</label>
-                            <input type="email" id="reg-email" placeholder="exemplo@hangar.com" required 
-                                style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: white; box-sizing: border-box;">
-                        </div>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <label style="color: #bbb; display: block; margin-bottom: 5px;">Senha</label>
-                            <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" required 
-                                style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: white; box-sizing: border-box;">
-                        </div>
 
-                        <div style="margin-bottom: 25px;">
-                            <label style="color: #bbb; display: block; margin-bottom: 8px;">Tipo de Perfil</label>
-                            <select id="reg-role" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: white; cursor: pointer;">
-                                <option value="piloto">Piloto</option>
-                                <option value="admin_hangar">Administrador de Hangar</option>
-                            </select>
-                        </div>
+    render: async () => `
+        <div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#121212;">
+            <form id="register-form" style="display:flex;flex-direction:column;gap:10px;">
+                <input type="text" id="name" placeholder="Nome" required />
+                <input type="email" id="email" placeholder="Email" required />
+                <input type="password" id="password" placeholder="Senha" required />
 
-                        <button type="submit" style="width: 100%; padding: 14px; border-radius: 6px; border: none; background: #4ecca3; color: #121212; font-weight: bold; cursor: pointer; font-size: 1rem;">
-                            Finalizar Cadastro
-                        </button>
-                    </form>
-                    
-                    <div style="text-align: center; margin-top: 20px;">
-                        <a href="/login" onclick="event.preventDefault(); window.navigate('/login')" style="color: #4ecca3; text-decoration: none; font-size: 0.9rem;">Já tem uma conta? Faça login</a>
-                    </div>
-                    <p id="reg-error" style="color: #ff4d4d; text-align: center; margin-top: 15px; font-size: 0.9rem; display: none;"></p>
-                </div>
-            </div>
-        `;
-    },
+                <select id="role" required>
+                    <option value="">Selecione o tipo de usuário</option>
+                    <option value="admin_hangar">Administrador de Hangar</option>
+                    <option value="piloto">Piloto</option>
+                </select>
+
+                <button type="submit">Criar Conta</button>
+                <span id="error" style="color:red;"></span>
+
+                <p style="color:white;">
+                    Já tem conta?
+                    <a href="#" id="go-login" style="color:#4ecca3;">Fazer login</a>
+                </p>
+            </form>
+        </div>
+    `,
 
     after_render: async () => {
         const form = document.getElementById('register-form');
-        const errorMsg = document.getElementById('reg-error');
+        const error = document.getElementById('error');
+        const goLogin = document.getElementById('go-login');
+
+        goLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.navigate('/login');
+        });
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            errorMsg.style.display = 'none';
 
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-password').value;
-            const role = document.getElementById('reg-role').value;
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+
+            if (!role) {
+                error.innerText = "Selecione um tipo de usuário";
+                return;
+            }
 
             try {
-                await AuthService.register(email, password, role);
-                alert("Conta criada com sucesso!");
-                window.navigate(role === 'admin_hangar' ? '/dashboard' : '/');
-            } catch (error) {
-                console.error(error);
-                errorMsg.innerText = "Erro ao cadastrar: " + error.message;
-                errorMsg.style.display = 'block';
+                await AuthService.register(name, email, password, role);
+                window.navigate('/');
+            } catch (err) {
+                error.innerText = err.message;
             }
         });
     }

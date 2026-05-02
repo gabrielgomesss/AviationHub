@@ -4,7 +4,8 @@ import { auth } from './services/firebase-config.js';
 const routes = {
     '/': () => import('./views/mapview.js'),
     '/login': () => import('./views/loginview.js'),
-    '/dashboard': () => import('./views/dashboardview.js')
+    '/dashboard': () => import('./views/dashboardview.js'),
+    '/register': () => import('./views/RegisterView.js'),
 };
 
 // Função auxiliar para garantir que o Firebase inicializou

@@ -1,93 +1,63 @@
 // src/views/LoginView.js
-import { AuthService } from '../services/AuthService.js';
+import { AuthService } from '../services/auth-service.js';
 
 const LoginView = {
     render: async () => {
         return `
-            <div class="login-container">
-                <div class="login-card glass">
-                    <h2 id="auth-title">Acessar Hub</h2>
-                    <p id="auth-subtitle">Entre com suas credenciais aeronáuticas</p>
+            <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #121212;">
+                <div style="background: #1e1e1e; padding: 40px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); width: 100%; max-width: 400px; border: 1px solid #333;">
+                    <h2 style="color: #4ecca3; text-align: center; margin-bottom: 25px; font-family: sans-serif;">HangarHub Login</h2>
                     
-                    <form id="auth-form">
-                        <div class="input-group">
-                            <label for="email">E-mail</label>
-                            <input type="email" id="email" placeholder="exemplo@aviacao.com" required>
+                    <form id="login-form">
+                        <div style="margin-bottom: 15px;">
+                            <label style="color: #bbb; display: block; margin-bottom: 5px;">E-mail</label>
+                            <input type="email" id="login-email" placeholder="seu@email.com" required 
+                                style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: white; box-sizing: border-box;">
                         </div>
                         
-                        <div class="input-group">
-                            <label for="password">Senha</label>
-                            <input type="password" id="password" placeholder="••••••••" required>
+                        <div style="margin-bottom: 25px;">
+                            <label style="color: #bbb; display: block; margin-bottom: 5px;">Senha</label>
+                            <input type="password" id="login-password" placeholder="******" required 
+                                style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: white; box-sizing: border-box;">
                         </div>
 
-                        <!-- Seleção de Perfil - Visível apenas no Cadastro -->
-                        <div id="role-selection" class="input-group" style="display: none;">
-                            <label for="role">Tipo de Perfil</label>
-                            <select id="role">
-                                <option value="piloto">Piloto / Usuário</option>
-                                <option value="admin_hangar">Administrador de Hangar</option>
-                                <option value="admin_master">Admin Master</option>
-                            </select>
-                        </div>
-
-                        <button type="submit" id="btn-auth" class="btn-primary">Entrar</button>
+                        <button type="submit" style="width: 100%; padding: 12px; border-radius: 6px; border: none; background: #4ecca3; color: #121212; font-weight: bold; cursor: pointer; transition: 0.3s;">
+                            Entrar no Sistema
+                        </button>
                     </form>
-
-                    <div class="auth-toggle">
-                        <p id="toggle-text">Não tem uma conta? <a href="#" id="link-toggle">Cadastre-se</a></p>
-                    </div>
+                    <p id="login-error" style="color: #ff4d4d; text-align: center; margin-top: 15px; font-size: 0.9rem; display: none;"></p>
                 </div>
             </div>
         `;
     },
 
     after_render: async () => {
-        const form = document.getElementById('auth-form');
-        const linkToggle = document.getElementById('link-toggle');
-        const authTitle = document.getElementById('auth-title');
-        const authSubtitle = document.getElementById('auth-subtitle');
-        const roleSelection = document.getElementById('role-selection');
-        const btnAuth = document.getElementById('btn-auth');
-        
-        let isLogin = true;
-
-        linkToggle.addEventListener('click', (e) => {
-            e.preventDefault();
-            isLogin = !isLogin;
-            
-            if (isLogin) {
-                authTitle.innerText = "Acessar Hub";
-                authSubtitle.innerText = "Entre com suas credenciais aeronáuticas";
-                btnAuth.innerText = "Entrar";
-                roleSelection.style.display = "none";
-                linkToggle.innerText = "Cadastre-se";
-                document.getElementById('toggle-text').firstChild.textContent = "Não tem uma conta? ";
-            } else {
-                authTitle.innerText = "Criar Conta";
-                authSubtitle.innerText = "Selecione seu perfil no ecossistema";
-                btnAuth.innerText = "Cadastrar";
-                roleSelection.style.display = "block";
-                linkToggle.innerText = "Fazer Login";
-                document.getElementById('toggle-text').firstChild.textContent = "Já possui conta? ";
-            }
-        });
+        const form = document.getElementById('login-form');
+        const errorMsg = document.getElementById('login-error');
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const role = document.getElementById('role').value;
+            errorMsg.style.display = 'none';
+
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
 
             try {
-                if (isLogin) {
-                    await AuthService.login(email, password);
+                const user = await AuthService.login(email, password);
+                
+                // Busca o papel (role) do usuário no Firestore antes de decidir para onde ir
+                const role = await AuthService.getUserRole(user.uid);
+                console.log("Usuário logado com papel:", role);
+
+                if (role === 'admin_hangar' || role === 'admin_master') {
+                    window.navigate('/dashboard');
                 } else {
-                    await AuthService.registerUser(email, password, role);
+                    window.navigate('/'); // Pilotos vão para o mapa
                 }
-                window.navigate('/');
+
             } catch (error) {
-                console.error("Erro na autenticação:", error);
-                alert("Falha na autenticação: " + error.message);
+                errorMsg.innerText = "Falha no login: Verifique suas credenciais.";
+                errorMsg.style.display = 'block';
             }
         });
     }

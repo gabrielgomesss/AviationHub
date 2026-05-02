@@ -1,6 +1,6 @@
 // src/app.js
 import { router } from './router.js';
-import { AuthService } from './services/AuthService.js';
+import { AuthService } from './services/auth-service.js';
 
 // Escuta mudanças de estado de autenticação para proteger rotas em tempo real
 AuthService.subscribeAuthState((user) => {

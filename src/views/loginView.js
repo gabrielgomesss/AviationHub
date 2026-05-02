@@ -1,7 +1,7 @@
 // src/views/LoginView.js
 import { AuthService } from '../services/AuthService.js';
 
-export const LoginView = {
+const LoginView = {
     render: async () => {
         return `
             <div class="login-container">
@@ -51,7 +51,6 @@ export const LoginView = {
         
         let isLogin = true;
 
-        // Alternar entre Login e Cadastro
         linkToggle.addEventListener('click', (e) => {
             e.preventDefault();
             isLogin = !isLogin;
@@ -73,10 +72,8 @@ export const LoginView = {
             }
         });
 
-        // Lógica de Submissão
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const role = document.getElementById('role').value;
@@ -84,13 +81,9 @@ export const LoginView = {
             try {
                 if (isLogin) {
                     await AuthService.login(email, password);
-                    alert("Login realizado com sucesso!");
                 } else {
                     await AuthService.registerUser(email, password, role);
-                    alert("Conta criada com sucesso como " + role + "!");
                 }
-                
-                // Redireciona para o mapa após sucesso
                 window.navigate('/');
             } catch (error) {
                 console.error("Erro na autenticação:", error);

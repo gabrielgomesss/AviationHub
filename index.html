@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Aviation Hub</title>
+    <link rel="stylesheet" href="src/assets/css/style.css">
+    <!-- Leaflet CSS para o Mapa -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body class="glass-theme">
+
+    <!-- Container Principal onde as Views serão injetadas -->
+    <main id="app-viewport"></main>
+
+    <!-- Bottom Navigation Bar Persistente[cite: 1] -->
+    <nav class="bottom-nav">
+        <button onclick="navigate('/map')">Mapa</button>
+        <button onclick="navigate('/reservas')">Reservas</button>
+        <button onclick="navigate('/perfil')">Perfil</button>
+    </nav>
+
+    <!-- Scripts Principais -->
+    <script type="module" src="src/app.js"></script>
+</body>
+</html>

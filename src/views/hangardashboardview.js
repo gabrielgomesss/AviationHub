@@ -1,192 +1,286 @@
-import { db } from "../services/firebase-config.js";
+import { db } from '../services/firebase-config.js';
 
 import {
     collection,
     query,
     where,
-    getDocs,
+    onSnapshot,
     updateDoc,
-    doc,
-    onSnapshot
+    doc
 } from "../services/firebase-config.js";
 
-import { HangarService } from "../services/hangarservice.js";
+import { HangarService } from '../services/hangarservice.js';
 
-let isLoading = false;
-let unsubscribeNotif = null;
+let unsubscribe = null;
 
 export default {
 
     async render() {
         return `
             <div>
-                <h2>
-                    Dashboard do Hangar
-                    <span id="notifBadge" style="
-                        background:red;
-                        color:white;
-                        border-radius:50%;
-                        padding:4px 10px;
-                        font-size:12px;
-                        display:none;
-                        margin-left:10px;
-                    ">0</span>
-                </h2>
+                <h2>Dashboard do Hangar</h2>
 
-                <div id="dashboardContent">Carregando...</div>
+                <!-- FILTRO PERÍODO -->
+                <div style="margin:10px 0;">
+                    <label><b>Período:</b></label>
+                    <select id="periodFilter">
+                        <option value="day">Dia</option>
+                        <option value="week">Semana</option>
+                        <option value="month" selected>Mês</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; gap:20px; margin-top:20px;">
+                    <div>
+                        <canvas id="chartReservas" width="300" height="300"></canvas>
+                    </div>
+
+                    <div id="statsBox">
+                        Carregando dados...
+                    </div>
+                </div>
+
+                <hr/>
+
+                <div>
+                    <label><b>Selecionar Hangar:</b></label><br/>
+                    <select id="hangarSelect"></select>
+                </div>
+
+                <hr/>
+
+                <div id="dashboardContent"></div>
             </div>
         `;
     },
 
     async after_render() {
 
+        const statsBox = document.getElementById("statsBox");
         const container = document.getElementById("dashboardContent");
-        const badge = document.getElementById("notifBadge");
+        const select = document.getElementById("hangarSelect");
+        const periodFilter = document.getElementById("periodFilter");
 
-        if (isLoading) return;
-        isLoading = true;
+        const canvas = document.getElementById("chartReservas");
+        const ctx = canvas.getContext("2d");
 
-        try {
+        let hangares = [];
+        let currentHangarId = null;
+        let currentPeriod = "month";
 
-            const hangares = await HangarService.getMyHangares();
+        // =========================
+        // 📊 FILTRO DE DATA
+        // =========================
+        const getDateLimit = (period) => {
+            const now = new Date();
 
-            if (!hangares || hangares.length === 0) {
-                container.innerHTML = "Nenhum hangar encontrado para este usuário.";
-                return;
+            if (period === "day") {
+                now.setHours(0, 0, 0, 0);
             }
 
-            container.innerHTML = `
-                <label>Selecione o hangar:</label>
-                <select id="hangarSelect">
-                    ${hangares.map(h => `
-                        <option value="${h.id}">
-                            ${h.nome} (${h.icao})
-                        </option>
-                    `).join("")}
-                </select>
+            if (period === "week") {
+                const day = now.getDay();
+                now.setDate(now.getDate() - day);
+                now.setHours(0, 0, 0, 0);
+            }
 
-                <div id="dashboardData" style="margin-top:20px;">
-                    Carregando reservas...
-                </div>
-            `;
+            if (period === "month") {
+                now.setDate(1);
+                now.setHours(0, 0, 0, 0);
+            }
 
-            const select = document.getElementById("hangarSelect");
-            const dataContainer = document.getElementById("dashboardData");
+            return now;
+        };
 
-            // =========================
-            // 🔥 NOTIFICAÇÃO EM TEMPO REAL
-            // =========================
-            const iniciarNotificacao = (hangarId) => {
+        // =========================
+        // 📊 GRÁFICO
+        // =========================
+        const drawChart = (pendenteQtd, aprovado, recusado, valorPendente) => {
 
-                if (unsubscribeNotif) {
-                    unsubscribeNotif();
-                }
+            const total = pendenteQtd + aprovado + recusado || 1;
 
-                const q = query(
-                    collection(db, "reservas"),
-                    where("hangarId", "==", hangarId),
-                    where("status", "==", "aguardando_pagamento")
-                );
+            const data = [
+                { value: pendenteQtd, color: "#f1c40f" },
+                { value: aprovado, color: "#2ecc71" },
+                { value: recusado, color: "#e74c3c" }
+            ];
 
-                unsubscribeNotif = onSnapshot(q, (snapshot) => {
+            let start = 0;
+            const cx = 150;
+            const cy = 150;
+            const r = 100;
 
-                    const count = snapshot.size;
+            ctx.clearRect(0, 0, 300, 300);
 
-                    if (count > 0) {
-                        badge.style.display = "inline-block";
-                        badge.innerText = count;
-                    } else {
-                        badge.style.display = "none";
+            data.forEach(item => {
+
+                const slice = (item.value / total) * 2 * Math.PI;
+
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, r, start, start + slice);
+                ctx.closePath();
+
+                ctx.fillStyle = item.color;
+                ctx.fill();
+
+                start += slice;
+            });
+
+            // 💰 centro do gráfico
+            ctx.fillStyle = "#000";
+            ctx.font = "14px Arial";
+            ctx.textAlign = "center";
+
+            ctx.fillText(
+                `Pendente: R$ ${valorPendente.toFixed(2)}`,
+                cx,
+                cy
+            );
+        };
+
+        // =========================
+        // 🔥 HANGARES
+        // =========================
+        hangares = await HangarService.getMyHangares();
+
+        if (!hangares.length) {
+            select.innerHTML = `<option>Nenhum hangar</option>`;
+            return;
+        }
+
+        select.innerHTML = hangares.map(h =>
+            `<option value="${h.id}">${h.nome} (${h.icao})</option>`
+        ).join("");
+
+        currentHangarId = hangares[0].id;
+        select.value = currentHangarId;
+
+        // =========================
+        // 🔥 CARREGAR RESERVAS
+        // =========================
+        const carregar = (hangarId, period) => {
+
+            if (unsubscribe) unsubscribe();
+
+            const minDate = getDateLimit(period);
+
+            const q = query(
+                collection(db, "reservas"),
+                where("hangarId", "==", hangarId)
+            );
+
+            unsubscribe = onSnapshot(q, (snapshot) => {
+
+                let pendenteQtd = 0;
+                let aprovado = 0;
+                let recusado = 0;
+
+                let valorPendente = 0;
+                let totalValor = 0;
+
+                const reservas = [];
+
+                snapshot.forEach(d => {
+
+                    const r = d.data();
+                    const data = new Date(r.dataInicio);
+
+                    // filtro período
+                    if (data < minDate) return;
+
+                    reservas.push({ id: d.id, ...r });
+
+                    if (r.status === "aguardando_pagamento") {
+                        pendenteQtd++;
+                        valorPendente += Number(r.valorTotal || 0);
                     }
+                    else if (r.status === "aprovado") aprovado++;
+                    else if (r.status === "recusado") recusado++;
+
+                    totalValor += Number(r.valorTotal || 0);
                 });
-            };
 
-            // =========================
-            // 🔥 CARREGAR RESERVAS
-            // =========================
-            const carregar = async (hangarId) => {
+                // =========================
+                // 📊 STATS
+                // =========================
+                statsBox.innerHTML = `
+                    <h3>Resumo (${period})</h3>
 
-                const hangar = hangares.find(h => h.id === hangarId);
-                if (!hangar) return;
+                    <p>⏳ Pendentes: ${pendenteQtd}</p>
+                    <p>💰 Valor pendente: R$ ${valorPendente.toFixed(2)}</p>
 
-                const q = query(
-                    collection(db, "reservas"),
-                    where("hangarId", "==", hangarId)
-                );
+                    <p>✅ Aprovadas: ${aprovado}</p>
+                    <p>❌ Recusadas: ${recusado}</p>
 
-                const snap = await getDocs(q);
-
-                const reservas = snap.docs.map(d => ({
-                    id: d.id,
-                    ...d.data()
-                }));
-
-                dataContainer.innerHTML = `
-                    <h3>${hangar.nome}</h3>
-                    <p><b>ICAO:</b> ${hangar.icao}</p>
+                    <p>📦 Total: ${reservas.length}</p>
 
                     <hr/>
 
-                    <h4>Reservas</h4>
-
-                    ${
-                        reservas.length === 0
-                        ? "<p>Nenhuma reserva encontrada</p>"
-                        : reservas.map(r => `
-                            <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
-                                <p><b>Usuário:</b> ${r.userEmail || '-'}</p>
-                                <p><b>Aeronave:</b> ${r.prefixoAviao || '-'}</p>
-                                <p><b>Início:</b> ${r.dataInicio || '-'}</p>
-                                <p><b>Fim:</b> ${r.dataFim || '-'}</p>
-                                <p><b>Status:</b> ${r.status}</p>
-
-                                <button class="approve" data-id="${r.id}">Aprovar</button>
-                                <button class="reject" data-id="${r.id}">Recusar</button>
-                            </div>
-                        `).join("")
-                    }
+                    <p><b>💰 Receita total: R$ ${totalValor.toFixed(2)}</b></p>
                 `;
 
+                drawChart(pendenteQtd, aprovado, recusado, valorPendente);
+
+                // =========================
+                // 📋 CARDS
+                // =========================
+                container.innerHTML = reservas.length === 0
+                    ? "<p>Nenhuma reserva encontrada</p>"
+                    : reservas.map(r => `
+                        <div style="
+                            border:1px solid #ccc;
+                            padding:12px;
+                            margin-bottom:10px;
+                            border-radius:8px;
+                        ">
+                            <p><b>Usuário:</b> ${r.userEmail || '-'}</p>
+                            <p><b>Aeronave:</b> ${r.prefixoAviao || '-'}</p>
+                            <p><b>Entrada:</b> ${r.dataInicio || '-'}</p>
+                            <p><b>Saída:</b> ${r.dataFim || '-'}</p>
+                            <p><b>Status:</b> ${r.status}</p>
+                            <p><b>💰 Valor:</b> R$ ${(r.valorTotal || 0).toFixed(2)}</p>
+
+                            <button class="approve" data-id="${r.id}">Aprovar</button>
+                            <button class="reject" data-id="${r.id}">Recusar</button>
+                        </div>
+                    `).join("");
+
                 document.querySelectorAll(".approve").forEach(btn => {
-                    btn.addEventListener("click", async () => {
+                    btn.onclick = async () => {
                         await updateDoc(doc(db, "reservas", btn.dataset.id), {
                             status: "aprovado"
                         });
-
-                        carregar(hangarId);
-                    });
+                    };
                 });
 
                 document.querySelectorAll(".reject").forEach(btn => {
-                    btn.addEventListener("click", async () => {
+                    btn.onclick = async () => {
                         await updateDoc(doc(db, "reservas", btn.dataset.id), {
                             status: "recusado"
                         });
-
-                        carregar(hangarId);
-                    });
+                    };
                 });
-            };
 
-            // =========================
-            // 🔥 EVENTO SELECT
-            // =========================
-            select.addEventListener("change", (e) => {
-                carregar(e.target.value);
-                iniciarNotificacao(e.target.value);
             });
+        };
 
-            // =========================
-            // 🔥 INIT
-            // =========================
-            carregar(hangares[0].id);
-            iniciarNotificacao(hangares[0].id);
+        // =========================
+        // 🔄 EVENTS
+        // =========================
+        select.addEventListener("change", (e) => {
+            currentHangarId = e.target.value;
+            carregar(currentHangarId, currentPeriod);
+        });
 
-        } catch (err) {
-            console.error("Erro no dashboard:", err);
-            container.innerHTML = "Erro ao carregar dashboard.";
-        } finally {
-            isLoading = false;
-        }
+        periodFilter.addEventListener("change", (e) => {
+            currentPeriod = e.target.value;
+            carregar(currentHangarId, currentPeriod);
+        });
+
+        // =========================
+        // 🚀 INIT
+        // =========================
+        carregar(currentHangarId, currentPeriod);
     }
 };

@@ -1,105 +1,101 @@
-import { HangarService } from '../services/hangarservice.js';
-import Navbar from '../../components/navbar.js';
+import { HangarService } from "../services/hangarservice.js";
 
-const EditHangarView = {
+export default {
 
-    render: async () => `
-        ${Navbar.render()}
+    async render() {
+        return `
+            <div>
+                <h2>Editar Hangar</h2>
+                <div id="editContainer">Carregando...</div>
+            </div>
+        `;
+    },
 
-        <div style="padding:20px;">
-            <h2>Editar Hangar</h2>
-
-            <form id="edit-form">
-                <input type="text" id="nome" placeholder="Nome do Hangar" required />
-                <input type="text" id="icao" placeholder="ICAO" required />
-
-                <h3>Serviços</h3>
-                <div id="services"></div>
-
-                <button type="button" id="add-service">Adicionar Serviço</button>
-                <br/><br/>
-
-                <button type="submit">Salvar</button>
-                <p id="msg"></p>
-            </form>
-        </div>
-    `,
-
-    after_render: async () => {
-        Navbar.after_render();
+    async after_render() {
 
         const params = new URLSearchParams(window.location.search);
-        const id = params.get('id');
-
-        const nomeInput = document.getElementById('nome');
-        const icaoInput = document.getElementById('icao');
-        const servicesDiv = document.getElementById('services');
-        const msg = document.getElementById('msg');
+        const id = params.get("id");
 
         const hangar = await HangarService.getHangarById(id);
 
-        nomeInput.value = hangar.nome;
-        icaoInput.value = hangar.icao;
+        if (!hangar) {
+            document.getElementById("editContainer").innerHTML = "Hangar não encontrado";
+            return;
+        }
 
-        const renderService = (s = { nome: '', preco_produto: '' }) => {
-            const div = document.createElement('div');
+        document.getElementById("editContainer").innerHTML = `
+            <input id="nome" value="${hangar.nome}" placeholder="Nome do hangar"/>
+
+            <h3>Serviços</h3>
+
+            <div id="servicosContainer"></div>
+
+            <button id="addServico">+ Adicionar serviço</button>
+
+            <br/><br/>
+
+            <button id="salvar">Salvar alterações</button>
+        `;
+
+        const container = document.getElementById("servicosContainer");
+
+        // 🔥 Criar linha de serviço
+        const criarServico = (s = {}) => {
+
+            const div = document.createElement("div");
+            div.style.marginBottom = "10px";
 
             div.innerHTML = `
-                <input type="text" class="service-name" value="${s.nome}" />
-                <input type="text" class="service-price" value="${s.preco_produto}" />
-                <button type="button" class="remove">Remover</button>
-                <hr/>
+                <input class="nome" value="${s.nome || ''}" placeholder="Nome do serviço"/>
+
+                <input class="preco" type="number" value="${s.preco_produto || 0}" placeholder="Preço"/>
+
+                <select class="tipo">
+                    <option value="fixo" ${s.tipo === "fixo" ? "selected" : ""}>Fixo</option>
+                    <option value="diaria" ${s.tipo === "diaria" ? "selected" : ""}>Diária</option>
+                </select>
+
+                <button class="remove">X</button>
             `;
 
-            div.querySelector('.remove').onclick = () => div.remove();
+            container.appendChild(div);
 
-            servicesDiv.appendChild(div);
+            div.querySelector(".remove").addEventListener("click", () => {
+                div.remove();
+            });
         };
 
-        hangar.servicos.forEach(renderService);
+        // 🔥 Carregar serviços existentes
+        (hangar.servicos || []).forEach(s => {
+            criarServico({
+                ...s,
+                tipo: s.tipo || "fixo" // fallback pra não quebrar
+            });
+        });
 
-        document.getElementById('add-service').onclick = () => renderService();
+        // 🔥 Adicionar novo serviço
+        document.getElementById("addServico").addEventListener("click", () => {
+            criarServico();
+        });
 
-        document.getElementById('edit-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // 🔥 Salvar alterações
+        document.getElementById("salvar").addEventListener("click", async () => {
 
-            const serviceNames = document.querySelectorAll('.service-name');
-            const servicePrices = document.querySelectorAll('.service-price');
+            const nome = document.getElementById("nome").value;
 
-            const servicos = [];
+            const servicos = Array.from(container.children).map(div => ({
+                nome: div.querySelector(".nome").value,
+                preco_produto: parseFloat(div.querySelector(".preco").value),
+                tipo: div.querySelector(".tipo").value
+            }));
 
-            for (let i = 0; i < serviceNames.length; i++) {
-                const nome = serviceNames[i].value;
+            await HangarService.updateHangar(id, {
+                nome,
+                servicos
+            });
 
-                const preco = parseFloat(
-                    servicePrices[i].value
-                        .replace('.', '')
-                        .replace(',', '.')
-                );
-
-                if (!nome || isNaN(preco)) {
-                    msg.innerText = "Erro nos serviços";
-                    return;
-                }
-
-                servicos.push({ nome, preco_produto: preco });
-            }
-
-            try {
-                await HangarService.updateHangar(id, {
-                    nome: nomeInput.value,
-                    icao: icaoInput.value,
-                    servicos
-                });
-
-                msg.style.color = "green";
-                msg.innerText = "Atualizado com sucesso!";
-            } catch (err) {
-                msg.style.color = "red";
-                msg.innerText = err.message;
-            }
+            alert("Hangar atualizado com sucesso!");
+            window.navigate('/hangares');
         });
     }
 };
-
-export default EditHangarView;

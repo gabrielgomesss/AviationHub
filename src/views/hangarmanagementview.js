@@ -1,11 +1,8 @@
 import { HangarService } from '../services/hangarservice.js';
-import Navbar from '../../components/navbar.js';
 
 const HangarManagementView = {
 
     render: async () => `
-        <div id="app-navbar"></div>
-
         <div style="padding:20px;">
             <h2>Meus Hangares</h2>
             <div id="hangares-list">Carregando...</div>
@@ -13,10 +10,6 @@ const HangarManagementView = {
     `,
 
     after_render: async () => {
-        // 🔹 Renderiza Navbar
-        const navbarContainer = document.getElementById('app-navbar');
-        navbarContainer.innerHTML = Navbar.render();
-        Navbar.after_render();
 
         const container = document.getElementById('hangares-list');
 
@@ -42,7 +35,10 @@ const HangarManagementView = {
                         <b>Serviços:</b>
                         <ul>
                             ${h.servicos.map(s => `
-                                <li>${s.nome} - R$ ${s.preco_produto}</li>
+                                <li>
+                                    ${s.nome} - R$ ${s.preco_produto}
+                                    (${s.tipo === 'diaria' ? 'Diária' : 'Fixo'})
+                                </li>
                             `).join('')}
                         </ul>
                     </div>

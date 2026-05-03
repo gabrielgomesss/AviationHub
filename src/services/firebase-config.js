@@ -1,8 +1,25 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
-// Substitua pelos seus dados do console do Firebase
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    getDoc,
+    doc,
+    updateDoc,
+    query,
+    where
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
 const firebaseConfig = {
     apiKey: "AIzaSyBxzJrz9TWYhqx2vtiljoXElidA1fv1_K0",
     authDomain: "hangarhub-b467b.firebaseapp.com",
@@ -12,7 +29,31 @@ const firebaseConfig = {
     appId: "1:840586201797:web:2217461d01e4d26b317eac"
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+// 🔥 singleton (evita duplicação)
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-export const db = getFirestore(app);
+// 🔥 instâncias
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// 🔥 EXPORTA TUDO CENTRALIZADO
+export {
+    db,
+    auth,
+
+    // firestore
+    collection,
+    addDoc,
+    getDocs,
+    getDoc,
+    doc,
+    updateDoc,
+    query,
+    where,
+
+    // auth
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut
+};

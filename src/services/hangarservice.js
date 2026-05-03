@@ -1,107 +1,44 @@
-import { db, auth } from './firebase-config.js';
-
 import {
+    db,
     collection,
     addDoc,
-    updateDoc,
-    doc,
-    arrayUnion,
-    serverTimestamp,
+    getDocs,
     getDoc,
-    getDocs
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    doc,
+    updateDoc,
+    query,
+    where
+} from './firebase-config.js';
 
-export const HangarService = {
+import { AuthService } from './authservice.js';
 
-    async getHangarById(id) {
-    const ref = doc(db, "Hangares", id);
-    const snap = await getDoc(ref);
+const COLLECTION = "Hangares";
 
-    if (!snap.exists()) return null;
+const HangarService = {
 
-    return { id: snap.id, ...snap.data() };
-},
+    async getHangaresByICAO(icao) {
+        try {
 
-    async createHangar(nome, icao, servicos) {
-        const user = auth.currentUser;
+            console.log("DB CHECK:", db);
 
-        if (!user) throw new Error("Usuário não autenticado");
+            const q = query(
+                collection(db, COLLECTION),
+                where("icao", "==", icao.toUpperCase())
+            );
 
-        const hangarRef = await addDoc(collection(db, "Hangares"), {
-            nome,
-            icao,
-            servicos,
-            ownerId: user.uid,
-            admins: [user.uid],
-            createdAt: serverTimestamp()
-        });
+            const snapshot = await getDocs(q);
 
-        const userRef = doc(db, "users", user.uid);
+            return snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
 
-        await updateDoc(userRef, {
-            managed_hangars: arrayUnion(hangarRef.id)
-        });
-
-        return hangarRef.id;
-    },
-
-    // 🔥 FUNÇÃO QUE ESTAVA FALTANDO
-    async getMyHangares() {
-        const user = auth.currentUser;
-
-        if (!user) throw new Error("Usuário não autenticado");
-
-        const userSnap = await getDoc(doc(db, "users", user.uid));
-        const userData = userSnap.data();
-
-        const ids = userData.managed_hangars || [];
-
-        if (!ids.length) return [];
-
-        const hangares = [];
-
-        for (let id of ids) {
-            const hangarSnap = await getDoc(doc(db, "Hangares", id));
-
-            if (hangarSnap.exists()) {
-                hangares.push({
-                    id: hangarSnap.id,
-                    ...hangarSnap.data()
-                });
-            }
+        } catch (err) {
+            console.error("🔥 ERRO REAL:", err);
+            return [];
         }
+    }
 
-        return hangares;
-    },
-
-    async getHangarById(id) {
-        const snap = await getDoc(doc(db, "Hangares", id));
-
-        if (!snap.exists()) throw new Error("Hangar não encontrado");
-
-        return {
-            id: snap.id,
-            ...snap.data()
-        };
-    },
-
-    async updateHangar(id, data) {
-        const user = auth.currentUser;
-
-        if (!user) throw new Error("Usuário não autenticado");
-
-        const hangarRef = doc(db, "Hangares", id);
-
-        await updateDoc(hangarRef, {
-            ...data,
-            updatedAt: serverTimestamp()
-        });
-    },
-    async getHangaresByIcao(icao) {
-    const snapshot = await getDocs(collection(db, "Hangares"));
-
-    return snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(h => h.icao.toLowerCase() === icao.toLowerCase());
-}
 };
+
+export { HangarService };

@@ -34,16 +34,6 @@ export default {
 
             <br/><br/>
 
-            <label>Data início:</label>
-            <input type="datetime-local" id="inicio"/>
-
-            <br/><br/>
-
-            <label>Data fim:</label>
-            <input type="datetime-local" id="fim"/>
-
-            <br/><br/>
-
             <h3 id="precoTotal">Total: R$ 0.00</h3>
 
             <button id="reservarBtn">Confirmar Reserva</button>
@@ -51,11 +41,55 @@ export default {
 
         const container = document.getElementById("servicosContainer");
 
-        // 🔥 CRIAR LINHA DE SERVIÇO
+        // =========================
+        // 🔥 CALCULAR TOTAL (POR SERVIÇO)
+        // =========================
+        const calcularTotal = () => {
+
+            const blocos = document.querySelectorAll("#servicosContainer > div");
+
+            let total = 0;
+
+            blocos.forEach(bloco => {
+
+                const select = bloco.querySelector(".servicoSelect");
+                const inicio = bloco.querySelector(".inicioServico").value;
+                const fim = bloco.querySelector(".fimServico").value;
+
+                if (!select) return;
+
+                const preco = parseFloat(select.selectedOptions[0]?.dataset?.preco || 0);
+                const tipo = select.selectedOptions[0]?.dataset?.tipo;
+
+                let multiplicador = 1;
+
+                if (inicio && fim && tipo === "diaria") {
+
+                    const ini = new Date(inicio);
+                    const end = new Date(fim);
+
+                    if (end > ini) {
+                        multiplicador = Math.ceil((end - ini) / (1000 * 60 * 60 * 24));
+                    }
+                }
+
+                total += preco * multiplicador;
+            });
+
+            document.getElementById("precoTotal").innerText =
+                `Total: R$ ${total.toFixed(2)}`;
+        };
+
+        // =========================
+        // 🔥 CRIAR SERVIÇO
+        // =========================
         const criarServico = () => {
 
             const div = document.createElement("div");
-            div.style.marginBottom = "10px";
+
+            div.style.marginBottom = "20px";
+            div.style.padding = "10px";
+            div.style.border = "1px solid #ccc";
 
             div.innerHTML = `
                 <select class="servicoSelect">
@@ -72,7 +106,21 @@ export default {
                     }
                 </select>
 
-                <button class="removerServico">X</button>
+                <br/><br/>
+
+                <label>Início:</label>
+                <input type="datetime-local" class="inicioServico"/>
+
+                <br/><br/>
+
+                <label>Fim:</label>
+                <input type="datetime-local" class="fimServico"/>
+
+                <br/><br/>
+
+                <button class="removerServico">Remover</button>
+
+                <hr/>
             `;
 
             container.appendChild(div);
@@ -82,70 +130,46 @@ export default {
                 calcularTotal();
             });
 
-            div.querySelector(".servicoSelect").addEventListener("change", calcularTotal);
+            div.querySelectorAll("select, input").forEach(el => {
+                el.addEventListener("change", calcularTotal);
+            });
         };
 
-        // 🔥 ADICIONAR PRIMEIRO
+        // =========================
+        // INIT
+        // =========================
         criarServico();
 
         document.getElementById("addServicoBtn").addEventListener("click", criarServico);
 
-        // 🔥 CALCULAR TOTAL
-        const calcularTotal = () => {
-
-            const selects = document.querySelectorAll(".servicoSelect");
-
-            const inicio = new Date(document.getElementById("inicio").value);
-            const fim = new Date(document.getElementById("fim").value);
-
-            let dias = 1;
-
-            if (inicio && fim && fim > inicio) {
-                dias = Math.ceil((fim - inicio) / (1000 * 60 * 60 * 24));
-            }
-
-            let total = 0;
-
-            selects.forEach(select => {
-
-                const preco = parseFloat(select.selectedOptions[0].dataset.preco || 0);
-                const tipo = select.selectedOptions[0].dataset.tipo;
-
-                if (tipo === "diaria") {
-                    total += preco * dias;
-                } else {
-                    total += preco;
-                }
-            });
-
-            document.getElementById("precoTotal").innerText =
-                `Total: R$ ${total.toFixed(2)}`;
-        };
-
-        document.getElementById("inicio").addEventListener("change", calcularTotal);
-        document.getElementById("fim").addEventListener("change", calcularTotal);
-
-        // 🔥 RESERVAR
+        // =========================
+        // RESERVA FINAL
+        // =========================
         document.getElementById("reservarBtn").addEventListener("click", async () => {
 
             try {
 
                 const user = AuthService.getCurrentUser();
 
-                const selects = document.querySelectorAll(".servicoSelect");
+                const blocos = document.querySelectorAll("#servicosContainer > div");
 
-                const servicos = Array.from(selects).map(select => ({
-                    nome: select.value,
-                    preco: parseFloat(select.selectedOptions[0].dataset.preco),
-                    tipo: select.selectedOptions[0].dataset.tipo
-                }));
+                const servicos = Array.from(blocos).map(bloco => {
+
+                    const select = bloco.querySelector(".servicoSelect");
+
+                    return {
+                        nome: select.value,
+                        preco: parseFloat(select.selectedOptions[0].dataset.preco),
+                        tipo: select.selectedOptions[0].dataset.tipo,
+                        inicio: bloco.querySelector(".inicioServico").value,
+                        fim: bloco.querySelector(".fimServico").value
+                    };
+                });
 
                 const reserva = {
                     hangarId,
                     userId: user.uid,
                     servicos,
-                    dataInicio: document.getElementById("inicio").value,
-                    dataFim: document.getElementById("fim").value,
                     status: "ativa"
                 };
 

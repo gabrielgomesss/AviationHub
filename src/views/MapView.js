@@ -1,129 +1,34 @@
+import Navbar from '../../components/navbar.js';
 import { HangarService } from '../services/hangarservice.js';
-import { db, collection } from "../services/firebase-config.js";
+import { AirportService } from '../services/airportservice.js';
+import { WeatherService } from '../services/weatherservice.js';
+import { AuthService } from "../services/authservice.js";
 
-const ref = collection(db, "Hangares");
-
-let map;
-let marker;
-
-function openDrawer(content) {
-    let drawer = document.getElementById("drawer");
-
-    if (!drawer) {
-        drawer = document.createElement("div");
-        drawer.id = "drawer";
-
-        drawer.style.position = "fixed";
-        drawer.style.bottom = "0";
-        drawer.style.left = "0";
-        drawer.style.width = "100%";
-        drawer.style.height = "50%";
-        drawer.style.background = "#fff";
-        drawer.style.boxShadow = "0 -2px 10px rgba(0,0,0,0.2)";
-        drawer.style.borderTopLeftRadius = "12px";
-        drawer.style.borderTopRightRadius = "12px";
-        drawer.style.padding = "15px";
-        drawer.style.overflowY = "auto";
-        drawer.style.zIndex = "9999";
-        drawer.style.transform = "translateY(100%)";
-        drawer.style.transition = "transform 0.3s ease";
-
-        document.body.appendChild(drawer);
-    }
-
-    drawer.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong>Detalhes</strong>
-            <button id="closeDrawer">Fechar</button>
-        </div>
-        <hr/>
-        ${content}
-    `;
-
-    setTimeout(() => {
-        drawer.style.transform = "translateY(0)";
-    }, 10);
-
-    document.getElementById("closeDrawer").onclick = closeDrawer;
-}
-
-function closeDrawer() {
-    const drawer = document.getElementById("drawer");
-    if (drawer) {
-        drawer.style.transform = "translateY(100%)";
-    }
-}
-
-async function renderDrawer(icao, hangares) {
-
-    let html = `<h3>${icao}</h3>`;
-
-    if (!hangares || hangares.length === 0) {
-        html += `<p>Nenhum hangar disponível nesta localidade.</p>`;
-        return html;
-    }
-
-    for (const h of hangares) {
-
-        // 🔥 pega dados atualizados do Firebase
-        const hangar = await HangarService.getHangarById(h.id);
-
-        html += `
-            <div style="
-                border:1px solid #ccc;
-                padding:10px;
-                margin-bottom:10px;
-                border-radius:8px;
-            ">
-                <h4>${hangar.nome}</h4>
-
-                <ul>
-                    ${(hangar.servicos || []).map(s => `
-                        <li>
-                            ${s.nome} - R$ ${s.preco_produto}
-                            (${s.tipo === 'diaria' ? 'Diária' : 'Fixo'})
-                        </li>
-                    `).join('')}
-                </ul>
-
-                <button onclick="goToHangar('${hangar.id}')">
-                    Saiba mais
-                </button>
-            </div>
-        `;
-    }
-
-    return html;
-}
-
-window.goToHangar = (id) => {
-    closeDrawer();
-    window.navigate(`/hangar?id=${id}`);
-};
 
 export default {
 
-    async render() {
-        return `
-            <div>
-                <h2>Buscar Hangares por ICAO</h2>
+async render() {
+    return `
+        <div>
+            <h2>Buscar Hangares por ICAO</h2>
 
-                <input type="text" id="icaoInput" placeholder="Ex: SBSP"/>
-                <button id="buscarBtn">Buscar</button>
+            <input type="text" id="icaoInput" placeholder="Ex: SBSP"/>
+            <button id="buscarBtn">Buscar</button>
 
-                <div id="map" style="height:300px; margin-top:15px;"></div>
-            </div>
-        `;
-    },
+            <div id="map" style="height:300px; margin-top:15px;"></div>
+        </div>
+    `;
+},
 
     async after_render() {
 
-        // 🔥 iniciar mapa
-        map = L.map('map').setView([-23.5505, -46.6333], 8);
+        let map = L.map('map').setView([-15.78, -47.93], 4);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
+            attribution: '© OpenStreetMap'
         }).addTo(map);
+
+        let marker;
 
         document.getElementById("buscarBtn").addEventListener("click", async () => {
 
@@ -133,36 +38,169 @@ export default {
 
             try {
 
-                // 🔥 busca hangares por ICAO
-                const hangares = await HangarService.getHangaresByICAO(icao);
-                
+                // 🔥 Busca completa (station + metar)
+                const airportData = await WeatherService.getAirportData(icao);
 
-                if (!hangares || hangares.length === 0) {
-                    openDrawer(`<p>Nenhum hangar encontrado para ${icao}</p>`);
+                if (!airportData) {
+                    alert("ICAO inválido");
                     return;
                 }
 
-                // 🔥 pegar coordenadas do primeiro hangar
-                const lat = hangares[0].lat || -23.5505;
-                const lng = hangares[0].lng || -46.6333;
+                const airport = {
+                    name: airportData.name,
+                    lat: airportData.lat,
+                    lon: airportData.lon,
+                    metar: airportData.metar,
+                    message: airportData.metar ? null : "METAR indisponível"
+                };
 
-                // 🔥 anima o mapa
-                map.flyTo([lat, lng], 12);
+                // ✈️ voar até o aeroporto
+                map.flyTo([airport.lat, airport.lon], 12, {
+                    animate: true,
+                    duration: 1.5
+                });
 
-                if (marker) {
-                    map.removeLayer(marker);
-                }
+                if (marker) map.removeLayer(marker);
 
-                marker = L.marker([lat, lng]).addTo(map);
+                marker = L.marker([airport.lat, airport.lon]).addTo(map);
 
-                // 🔥 abrir drawer com dados atualizados
-                openDrawer(await renderDrawer(icao, hangares));
+                // 🔥 buscar hangares
+                const hangares = await HangarService.getHangaresByIcao(icao);
+
+                // 🔥 abrir modal
+                openBottomSheet(await renderDrawer(airport, icao, hangares));
 
             } catch (err) {
                 console.error(err);
-                console.log("db =", db);
-                openDrawer(`<p>Erro ao buscar hangares.</p>`);
+                alert("Erro ao buscar dados");
             }
         });
     }
 };
+
+
+// ==========================
+// 🔽 BOTTOM SHEET
+// ==========================
+
+function openBottomSheet(content) {
+    let sheet = document.getElementById("bottom-sheet");
+
+    if (!sheet) {
+        sheet = document.createElement("div");
+        sheet.id = "bottom-sheet";
+
+        sheet.style.position = "fixed";
+        sheet.style.left = "0";
+        sheet.style.bottom = "-100%";
+        sheet.style.width = "100%";
+        sheet.style.height = "70%";
+        sheet.style.background = "#fff";
+        sheet.style.boxShadow = "0 -2px 10px rgba(0,0,0,0.3)";
+        sheet.style.transition = "bottom 0.3s ease";
+        sheet.style.zIndex = "9999";
+        sheet.style.borderTopLeftRadius = "12px";
+        sheet.style.borderTopRightRadius = "12px";
+        sheet.style.overflowY = "auto";
+        sheet.style.padding = "15px";
+
+        document.body.appendChild(sheet);
+    }
+
+    sheet.innerHTML = content;
+
+    setTimeout(() => {
+        sheet.style.bottom = "0";
+    }, 10);
+}
+
+function closeBottomSheet() {
+    const sheet = document.getElementById("bottom-sheet");
+    if (sheet) {
+        sheet.style.bottom = "-100%";
+    }
+}
+
+window.closeBottomSheet = closeBottomSheet;
+
+
+// ==========================
+// 🔽 NAVEGAÇÃO
+// ==========================
+
+function goToPage(path) {
+    closeBottomSheet();
+
+    setTimeout(() => {
+        window.navigate(path);
+    }, 300);
+}
+
+window.goToPage = goToPage;
+
+
+// ==========================
+// 🔽 RENDER DO MODAL
+// ==========================
+
+async function renderDrawer(airport, icao, hangares) {
+
+    let weatherHTML = "";
+
+    if (airport.metar) {
+
+        const m = airport.metar;
+
+        weatherHTML = `
+            <p><b>Condição:</b> ${m.conditions?.[0]?.text || '-'}</p>
+            <p><b>Temperatura:</b> ${m.temperature?.celsius || '-'}°C</p>
+            <p><b>Vento:</b> ${m.wind?.speed_kts || '-'} kt</p>
+            <p><b>Visibilidade:</b> ${m.visibility?.meters || '-'} m</p>
+            <p style="font-size:12px; color:gray;">
+                Atualizado em: ${m.observed}
+            </p>
+        `;
+
+    } else {
+
+        weatherHTML = `
+            <p style="color:#999;">
+                ${airport.message}
+            </p>
+        `;
+    }
+
+    return `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="margin:0;">${airport.name} (${icao})</h2>
+            <button onclick="closeBottomSheet()" style="font-size:18px;">✖</button>
+        </div>
+
+        <hr/>
+
+        <h3>Clima</h3>
+        ${weatherHTML}
+
+        <hr/>
+
+        <h3>Hangares disponíveis</h3>
+
+        ${
+            hangares.length
+            ? hangares.map(h => `
+                <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px; border-radius:8px;">
+                    <h4>${h.nome}</h4>
+
+                    <button onclick="goToPage('/hangar?id=${h.id}')">
+                        Saiba mais
+                    </button>
+
+                    <button onclick="goToPage('/reserva?hangarId=${h.id}')">
+                        Reservar
+                    </button>
+                </div>
+            `).join('')
+            : `<p style="color:#555;">Nenhum hangar disponível nesta localidade</p>`
+        }
+    `;
+}

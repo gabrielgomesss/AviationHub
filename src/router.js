@@ -13,70 +13,85 @@ const routes = {
     '/hangar': { view: () => import('./views/hangarview.js'), private: true },
 };
 
+// =========================
+// LOCK ANTI LOOP
+// =========================
+let isRendering = false;
+
+// =========================
+// ROUTER PRINCIPAL
+// =========================
 export async function router() {
 
-    const path = window.location.pathname;
-    const app = document.getElementById('app-viewport');
+    if (isRendering) return; // 🔥 evita loop
 
-    if (!app) return;
-
-    const route = routes[path] || routes['/'];
-
-    // 🔐 Proteção de rota
-    if (route.private && !AuthService.isAuthenticated()) {
-        return window.navigate('/login');
-    }
-
-    // 🔐 Evita acessar login logado
-    if (path === '/login' && AuthService.isAuthenticated()) {
-        return window.navigate('/');
-    }
+    isRendering = true;
 
     try {
+
+        const path = window.location.pathname;
+        const app = document.getElementById('app-viewport');
+
+        if (!app) return;
+
+        const route = routes[path] || routes['/'];
+
+        // 🔐 auth guard
+        if (route.private && !AuthService.isAuthenticated()) {
+            return window.navigate('/login');
+        }
+
+        if (path === '/login' && AuthService.isAuthenticated()) {
+            return window.navigate('/');
+        }
+
         const module = await route.view();
         const View = module.default;
 
         const user = AuthService.getUser();
 
-        // 🔒 Controle de role
         if (path === '/dashboard' && !user?.permissions?.canEditReservations) {
             return window.navigate('/');
         }
 
-        // 🔥 Layout global
-        let layout = '';
-
-        if (path !== '/login' && path !== '/register') {
-            layout = Navbar.render();
-        }
+        const layout = (path !== '/login' && path !== '/register')
+            ? Navbar.render()
+            : '';
 
         app.innerHTML = `
             ${layout}
             <div id="page-content" style="padding:15px;"></div>
         `;
 
-        // 🔥 Ativa eventos do navbar
-        if (path !== '/login' && path !== '/register') {
-            Navbar.after_render();
-        }
+        if (layout) Navbar.after_render?.();
 
         const page = document.getElementById("page-content");
 
         page.innerHTML = await View.render();
 
-        if (View.after_render) {
-            await View.after_render();
-        }
+        await View.after_render?.();
 
     } catch (err) {
         console.error("Router error:", err);
-        app.innerHTML = "<h1>Erro ao carregar página</h1>";
+    } finally {
+        isRendering = false;
     }
 }
 
+// =========================
+// NAVIGAÇÃO SEGURA
+// =========================
 window.navigate = (path) => {
+
+    if (window.location.pathname === path) return;
+
     window.history.pushState({}, "", path);
-    router();
+
+    queueMicrotask(router); // 🔥 evita execução síncrona em cascata
 };
 
-window.onpopstate = router;
+// =========================
+// EVENTOS GLOBAIS (UMA VEZ SÓ)
+// =========================
+window.addEventListener("popstate", router);
+window.addEventListener("DOMContentLoaded", router);

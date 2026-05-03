@@ -9,6 +9,8 @@ import {
     doc,
     updateDoc,
     query,
+    arrayUnion,
+    serverTimestamp,
     where
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -43,12 +45,14 @@ export {
 
     // firestore
     collection,
+    serverTimestamp,
     addDoc,
     getDocs,
     getDoc,
     doc,
     updateDoc,
     query,
+    arrayUnion,
     where,
 
     // auth

@@ -5,48 +5,36 @@ export default {
 
     async render() {
         return `
-            <div id="app-navbar"></div>
-            <div class="hangar-detail-page-light">
-                <!-- Camada de Background dedicada para garantir o desfoque -->
-                <div class="bg-overlay-blur"></div>
-                
-                <div class="hangar-view-container-light">
-                    <div class="hangar-header-light">
-                        <div class="header-nav">
-                            <button class="btn-close-light" onclick="window.history.back()">✕</button>
-                        </div>
-                        <div class="header-main-info">
-                            <h2>Novo Hangar</h2>
-                            <p class="subtitle-light">Configure sua unidade e serviços</p>
-                        </div>
+  <div id="app-navbar"></div>
+            <div class="hangar-page-layout">
+                <div class="page-overlay" onclick="window.history.back()"></div>
+                <div class="hangar-container-fluid">
+                    <div class="page-header-block">
+                        <h2>Novo Hangar</h2>
+                        <p class="subtitle-light">Configure sua infraestrutura</p>
                     </div>
                     
-                    <div class="content-section-light">
-                        <div class="form-section">
-                            <h3 class="section-label-light">IDENTIFICAÇÃO</h3>
-                            <div class="input-block">
-                                <label class="field-label">NOME DO HANGAR</label>
-                                <input type="text" id="nome" class="input-field-light" placeholder="Ex: Hangar Alpha"/>
-                            </div>
-                            <div class="input-block" style="margin-top: 15px;">
-                                <label class="field-label">ICAO (LOCALIDADE)</label>
-                                <input type="text" id="icao" class="input-field-light" placeholder="Ex: SBMT"/>
-                            </div>
+                    <div style="margin-top: 25px;">
+                        <div class="input-block">
+                            <label class="field-label">Nome do Hangar</label>
+                            <input type="text" id="nome" class="input-field-light" placeholder="Ex: Hangar Congonhas"/>
+                        </div>
+                        
+                        <div class="input-block" style="margin-top: 15px;">
+                            <label class="field-label">Código ICAO</label>
+                            <input type="text" id="icao" class="input-field-light" placeholder="SBSP"/>
                         </div>
 
-                        <div class="form-section" style="margin-top: 30px;">
-                            <h3 class="section-label-light">TABELA DE SERVIÇOS</h3>
+                        <div style="margin-top: 30px;">
+                            <h3 class="field-label">Tabela de Serviços</h3>
                             <div id="servicosContainer"></div>
-                            
-                            <button id="addServicoBtn" class="btn-add-service-dashed">
-                                <span>+</span> Adicionar serviço
+                            <button id="addServicoBtn" style="width:100%; background:none; border:2px dashed #cbd5e1; padding:15px; border-radius:14px; color:#64748b; font-weight:800; cursor:pointer; margin-top:10px;">
+                                + Adicionar Serviço
                             </button>
                         </div>
 
-                        <div class="action-footer-light">
-                            <button id="criarHangarBtn" class="btn-primary-emerald-bold">
-                                CRIAR HANGAR
-                            </button>
+                        <div style="margin-top: 40px;">
+                            <button id="criarHangarBtn" class="btn-primary-emerald-bold">FINALIZAR CADASTRO</button>
                         </div>
                     </div>
                 </div>

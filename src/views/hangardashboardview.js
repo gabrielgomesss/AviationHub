@@ -14,23 +14,32 @@ let unsubscribe = null;
 export default {
     async render() {
         return `
-            <div id="app-navbar"></div>
-            <div class="hangar-detail-page-light">
-                <div class="bg-overlay-blur"></div>
-                
-                <div class="hangar-view-container-light dashboard-container">
-                    <div class="hangar-header-light">
-                        <h2>Dashboard Operacional</h2>
-                        <div class="filter-row">
-                            <select id="hangarSelect" class="input-field-light"></select>
-                            <select id="periodFilter" class="input-field-light">
-                                <option value="day">Hoje</option>
-                                <option value="week">Semana</option>
-                                <option value="month" selected>Mês</option>
-                            </select>
-                        </div>
+     <div id="app-navbar"></div>
+        <div class="hangar-page-layout" style="justify-content: flex-start;">
+            <div class="hangar-container-fluid" style="height: 100%; border-radius: 0; padding-top: 50px; background: #fff;">
+                <div class="page-header-block">
+                    <h2>Dashboard</h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+                        <select id="hangarSelect" class="input-field-light"></select>
+                        <select id="periodFilter" class="input-field-light">
+                            <option value="month">Mês Atual</option>
+                            <option value="week">Semana</option>
+                        </select>
                     </div>
+                </div>
 
+                <div id="statsBox" style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 25px 0;">
+                    <!-- Cards de KPI: Pendente, Receita, etc -->
+                </div>
+
+                <div class="form-card-full" style="background:#f8fafc; padding:20px; border-radius:24px; border:1px solid #f1f5f9;">
+                    <h3 class="field-label" style="margin-bottom: 15px; display: block;">Fluxo de Reservas</h3>
+                    <div id="dashboardContent">
+                        <div class="loading-state" style="font-size:0.9rem; color:#94a3b8;">Carregando movimentação...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
                     <!-- Gráfico e Resumo -->
                     <div class="dashboard-stats-grid">
                         <div class="chart-box">

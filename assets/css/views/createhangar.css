@@ -1,62 +1,77 @@
-/* Container de visualização */
-.hangar-detail-page-light {
-    position: relative;
-    min-height: 100vh;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    overflow-x: hidden;
-}
-
-/* Camada de imagem e desfoque forçado */
-.bg-overlay-blur {
+/* Estrutura de Layout Base */
+.hangar-page-layout {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    /* Imagem de aeronave genérica de alta disponibilidade */
-    background-image: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.8)), 
-                      url('https://sttfbo.com/wp-content/uploads/2020/09/Standard-Aviation-47.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    filter: blur(12px); /* Desfoque forte para destacar o card branco */
-    transform: scale(1.1); /* Evita bordas brancas causadas pelo blur */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Alinha na base para efeito Bottom Sheet */
+    z-index: 1000;
 }
 
-/* Card Branco - Agora com mais contraste */
-.hangar-view-container-light {
-    position: relative;
-    z-index: 10;
+/* Background com desfoque para as Sheets */
+.page-overlay {
+    position: absolute;
+    top: 0;
     width: 100%;
-    max-width: 480px;
-    background: #ffffff;
-    border-radius: 32px;
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-    margin-bottom: 80px;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(6px);
+    z-index: -1;
 }
 
-/* Estilização interna para manter o padrão Light Glass */
+/* Container do Bottom Sheet (100% largura) */
+.hangar-container-fluid {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 32px 32px 0 0;
+    padding: 25px 20px 110px 20px; /* Padding extra para não conflitar com o menu inferior */
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.3);
+    max-height: 92vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+    animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+/* Indicador de arraste */
+.bottom-sheet-handle {
+    width: 45px;
+    height: 5px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    margin: -5px auto 25px auto;
+}
+
+/* Estilização de Formulários e Textos */
+.page-header-block h2 { font-size: 1.7rem; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: -0.5px; }
+.subtitle-light { color: #64748b; font-size: 0.95rem; margin-top: 4px; }
+
 .input-field-light {
     width: 100%;
-    padding: 14px;
+    padding: 15px;
     border-radius: 14px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #cbd5e1;
     background: #f8fafc;
     color: #1e293b;
     font-weight: 600;
+    margin-top: 8px;
     box-sizing: border-box;
+    font-size: 1rem;
 }
 
 .field-label {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 800;
-    color: #64748b;
-    margin-bottom: 6px;
-    display: block;
+    color: #94a3b8;
     text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .btn-primary-emerald-bold {
@@ -66,21 +81,19 @@
     border: none;
     padding: 20px;
     border-radius: 18px;
-    font-weight: 900;
-    font-size: 1rem;
+    font-weight: 800;
+    font-size: 1.1rem;
     cursor: pointer;
-    margin-top: 20px;
-    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.25);
+    transition: transform 0.2s;
 }
 
-.btn-add-service-dashed {
+.btn-primary-emerald-bold:active { transform: scale(0.98); }
+
+/* Grid de Cards */
+.standard-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
     width: 100%;
-    background: transparent;
-    border: 2px dashed #cbd5e1;
-    border-radius: 20px;
-    padding: 16px;
-    color: #64748b;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 15px;
 }

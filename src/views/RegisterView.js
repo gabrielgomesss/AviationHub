@@ -3,26 +3,60 @@ import { AuthService } from '../services/authservice.js';
 const RegisterView = {
 
     render: async () => `
-        <div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#121212;">
-            <form id="register-form" style="display:flex;flex-direction:column;gap:10px;">
-                <input type="text" id="name" placeholder="Nome" required />
-                <input type="email" id="email" placeholder="Email" required />
-                <input type="password" id="password" placeholder="Senha" required />
+        <div class="full-page-auth-container">
+            <div class="auth-card">
+                
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">🚀</div>
+                    <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin: 0;">Criar Conta</h2>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-top: 5px;">Inicie sua jornada no AviationHub</p>
+                </div>
 
-                <select id="role" required>
-                    <option value="">Selecione o tipo de usuário</option>
-                    <option value="admin_hangar">Administrador de Hangar</option>
-                    <option value="piloto">Piloto</option>
-                </select>
+                <form id="register-form" style="display: grid; gap: 15px;">
+                    <div class="input-block">
+                        <label class="field-label" style="font-size: 0.7rem; font-weight: 800; color: #94a3b8;">NOME COMPLETO</label>
+                        <input type="text" id="name" class="input-field-light" placeholder="Seu nome" required style="margin-top: 5px;"/>
+                    </div>
 
-                <button type="submit">Criar Conta</button>
-                <span id="error" style="color:red;"></span>
+                    <div class="input-block">
+                        <label class="field-label" style="font-size: 0.7rem; font-weight: 800; color: #94a3b8;">E-MAIL</label>
+                        <input type="email" id="email" class="input-field-light" placeholder="seu@email.com" required style="margin-top: 5px;"/>
+                    </div>
 
-                <p style="color:white;">
-                    Já tem conta?
-                    <a href="#" id="go-login" style="color:#4ecca3;">Fazer login</a>
-                </p>
-            </form>
+                    <div class="input-block">
+                        <label class="field-label" style="font-size: 0.7rem; font-weight: 800; color: #94a3b8;">SENHA</label>
+                        <input type="password" id="password" class="input-field-light" placeholder="Mínimo 6 caracteres" required style="margin-top: 5px;"/>
+                    </div>
+
+                    <div class="input-block">
+                        <label class="field-label" style="font-size: 0.7rem; font-weight: 800; color: #94a3b8;">TIPO DE USUÁRIO</label>
+                        <select id="role" class="input-field-light" required style="margin-top: 5px;">
+                            <option value="">Selecione o tipo</option>
+                            <option value="admin_hangar">Administrador de Hangar</option>
+                            <option value="piloto">Piloto</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-primary-emerald-bold" style="margin-top: 15px;">
+                        CRIAR MINHA CONTA
+                    </button>
+                    
+                    <span id="error" style="color: #ef4444; font-size: 0.85rem; text-align: center; font-weight: 600;"></span>
+                </form>
+
+                <div style="margin-top: 25px; text-align: center;">
+                    <p style="color: #64748b; font-size: 0.85rem;">
+                        Já tem uma conta? 
+                        <span id="go-login" style="color: #10b981; font-weight: 800; cursor: pointer;">Fazer login</span>
+                    </p>
+                </div>
+
+                <div style="margin-top: 40px; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+                    <p style="color: #94a3b8; font-size: 0.7rem; font-style: italic; line-height: 1.4; margin: 0;">
+                        "Criado e desenvolvido por Gabriel Ribeiro."
+                    </p>
+                </div>
+            </div>
         </div>
     `,
 

@@ -83,7 +83,6 @@ export default {
     renderDrawer(airport, icao, hangares, metar) {
         return `
             <div class="drawer-header-sticky">
-                <div class="sheet-handle"></div>
                 
                 <div class="drawer-header-content">
                     <div class="header-text-group">

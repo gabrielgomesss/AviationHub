@@ -1,53 +1,79 @@
 import { AuthService } from '../services/authservice.js';
 
 const LoginView = {
+    render: async () => {
+        return `
+            <div class="login-container">
+                <div class="login-card-glass">
+                    <div class="login-brand">
+                        <h1>AviationHub</h1>
+                        <p>Flight Control System</p>
+                    </div>
 
-    render: async () => `
-        <div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#121212;">
-            <form id="login-form" style="display:flex;flex-direction:column;gap:10px;">
-                <input type="email" id="email" placeholder="Email" required />
-                <input type="password" id="password" placeholder="Senha" required />
-                <button type="submit">Entrar</button>
-                <span id="error" style="color:red;"></span>
+                    <form id="login-form">
+                        <div class="field-group">
+                            <label for="email">E-mail do Piloto</label>
+                            <input type="email" id="email" required placeholder="exemplo@hangar.com">
+                        </div>
 
-                <p style="color:white; text-align:center; margin-top:10px;">
-                    Não tem conta? 
-                    <a href="#" id="go-register" style="color:#4ecca3;">Criar conta</a>
-                </p>
-            </form>
-        </div>
-    `,
+                        <div class="field-group">
+                            <label for="password">Senha de Acesso</label>
+                            <input type="password" id="password" required placeholder="••••••••">
+                        </div>
+
+                        <button type="submit" id="btn-login" class="btn-submit-glass">
+                            Acessar Sistema
+                        </button>
+                    </form>
+
+                    <div id="login-message"></div>
+                </div>
+            </div>
+        `;
+    },
+
 
     after_render: async () => {
-        const form = document.getElementById('login-form');
-        const error = document.getElementById('error');
-        const goRegister = document.getElementById('go-register');
+        const loginForm = document.getElementById('login-form');
+        const loginBtn = document.getElementById('btn-login');
+        const messageDiv = document.getElementById('login-message');
 
-        goRegister.addEventListener('click', (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            window.navigate('/register');
+            
+            // UI Feedback
+            loginBtn.disabled = true;
+            loginBtn.innerText = "Sincronizando Dados...";
+            messageDiv.style.color = "var(--text-muted)";
+            messageDiv.innerText = "Validando credenciais...";
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // Chama o login consolidado que já retorna a role (resolvendo erro linha 43)
+                const session = await AuthService.login(email, password);
+                
+                messageDiv.style.color = "var(--primary-emerald)";
+                messageDiv.innerText = `Acesso autorizado: ${session.role}`;
+
+                // Redirecionamento baseado na Role
+                setTimeout(() => {
+                    if (session.role === 'admin_master' || session.role === 'admin_hangar') {
+                        window.navigate('/dashboard');
+                    } else {
+                        window.navigate('/');
+                    }
+                }, 800);
+
+            } catch (error) {
+                messageDiv.style.color = "#ef4444";
+                messageDiv.innerText = "Falha na autenticação: " + error.message;
+                loginBtn.disabled = false;
+                loginBtn.innerText = "EFETUAR DECOLAGEM";
+            }
         });
-
-        form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const msg = document.getElementById('msg');
-
-    try {
-        // 🔥 1. Faz login
-        await AuthService.login(email, password);
-
-        // 🔥 2. Aguarda carregar usuário completo
-        await AuthService.init();
-
-        // 🔥 3. Agora sim navega
-        window.navigate('/mapa');
-
-    } catch (err) {
-        msg.innerText = err.message;
-    }})}
+    }
 };
 
 export default LoginView;

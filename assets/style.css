@@ -7,7 +7,8 @@
 @import url("./css/views/hangarview.css");
 @import url("./css/views/hangarmanagement.css");
 @import url("./css/views/reservaview.css");
-
+@import url("./css/views/navbar.css");
+/* 
 #main-nav,
 .bottom-nav {
     position: fixed !important;
@@ -90,4 +91,15 @@
     border-radius: 10px;
 
     display: none;
+} */
+
+/* Variáveis de Design - AviationHub Premium */
+:root {
+    --primary-emerald: #4ecca3;
+    --emerald-glow: rgba(78, 204, 163, 0.35);
+    --bg-deep: #0f172a;
+    --glass-bg: rgba(30, 41, 59, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --text-light: #f8fafc;
+    --text-dim: #94a3b8;
 }

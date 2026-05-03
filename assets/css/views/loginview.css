@@ -1,26 +1,114 @@
+/* Variáveis de Design - AviationHub Premium */
+:root {
+    --primary-emerald: #4ecca3;
+    --emerald-glow: rgba(78, 204, 163, 0.35);
+    --bg-deep: #0f172a;
+    --glass-bg: rgba(30, 41, 59, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --text-light: #f8fafc;
+    --text-dim: #94a3b8;
+}
+
+/* Container Principal */
 .login-container {
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    background: radial-gradient(circle at top right, #1e293b, #0f172a);
+    font-family: 'Inter', sans-serif;
 }
 
-.login-box {
-    width: 360px;
-    padding: 30px;
-}
-
-.login-box h1 {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.login-box input {
+/* Card com Efeito Glassmorphism */
+.login-card-glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 45px;
     width: 100%;
-    margin-bottom: 12px;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: transparent;
+    max-width: 400px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    text-align: center;
+}
+
+/* Cabeçalho */
+.login-brand h1 {
+    color: var(--primary-emerald);
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -1.5px;
+}
+
+.login-brand p {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 8px;
+}
+
+/* Grupos de Input */
+.field-group {
+    text-align: left;
+    margin-top: 25px;
+}
+
+.field-group label {
+    display: block;
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    margin-left: 4px;
+    text-transform: uppercase;
+}
+
+.field-group input {
+    width: 100%;
+    padding: 14px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
     color: white;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.field-group input:focus {
+    outline: none;
+    border-color: var(--primary-emerald);
+    box-shadow: 0 0 15px var(--emerald-glow);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+/* Botão de Ação */
+.btn-submit-glass {
+    width: 100%;
+    margin-top: 30px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--primary-emerald) 0%, #45b792 100%);
+    color: #0f172a;
+    border: none;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+.btn-submit-glass:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px var(--emerald-glow);
+}
+
+/* Mensagens de Erro/Status */
+#login-message {
+    margin-top: 20px;
+    font-size: 0.8rem;
+    min-height: 1.2rem;
 }

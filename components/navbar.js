@@ -7,31 +7,14 @@ const Navbar = {
 
         return `
             <div class="bottom-nav-container">
-                <nav class="pill-nav" style="position: relative;">
+                <nav class="pill-nav">
                     <button class="nav-pill" id="nav-map" data-path="#/">Mapa</button>
                     ${user?.permissions?.canEditReservations ? `
                         <button class="nav-pill" id="nav-create" data-path="#/create-hangar">Criar</button>
                         <button class="nav-pill" id="nav-manage" data-path="#/hangares">Hangares</button>
                         <button class="nav-pill" id="nav-dashboard" data-path="#/hangar-dashboard" style="position: relative; overflow: visible;">
                             Dash
-                            <span id="badge-reservas" style="
-                                display: none;
-                                position: absolute;
-                                top: -11px;
-                                right: -4px;
-                                background-color: #ff3b30;
-                                color: white;
-                                font-size: 11px;
-                                font-weight: bold;
-                                min-width: 18px;
-                                height: 18px;
-                                border-radius: 10px;
-                                padding: 0 5px;
-                                align-items: center;
-                                justify-content: center;
-                                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                                z-index: 10;
-                            ">0</span>
+                            <span id="badge-reservas" class="nav-badge" style="display: none;">0</span>
                         </button>
                     ` : ''}
                     <button class="nav-pill btn-exit" id="nav-logout">Sair</button>
@@ -51,6 +34,8 @@ const Navbar = {
 
             if (targetPath && currentPath === targetPath) {
                 pill.classList.add('active');
+                // Centraliza o item ativo caso haja scroll lateral
+                pill.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
             }
 
             if (targetPath) {
@@ -61,17 +46,16 @@ const Navbar = {
             }
         });
 
-        // --- LÓGICA DE ATUALIZAÇÃO DO BADGE EM TEMPO REAL ---
+        // Monitoramento de Reservas Pendentes em Tempo Real
         if (user?.permissions?.canEditReservations) {
             const badge = document.getElementById('badge-reservas');
             
-            // Ativa o listener para o status específico do seu banco
             ReservaService.listenReservasPorStatus("aguardando_pagamento", (reservas) => {
                 if (reservas && reservas.length > 0) {
                     badge.innerText = reservas.length > 9 ? '9+' : reservas.length;
-                    badge.style.display = 'flex'; // Torna visível como flex para centralizar o texto
+                    badge.style.display = 'flex';
                 } else {
-                    badge.style.display = 'none'; // Oculta se não houver pendências
+                    badge.style.display = 'none';
                 }
             });
         }

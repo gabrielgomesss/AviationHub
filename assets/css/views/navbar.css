@@ -1,11 +1,10 @@
 /* --- Unificação de Menu Único no Rodapé --- */
 .bottom-nav-container {
     position: fixed;
-    bottom: 30px; /* Posicionado na parte inferior */
-    left: 0;
-    width: 100%;
+    bottom: 30px; 
+    width: 90%;
     display: flex;
-    justify-content: center;
+    justify-self: center;
     z-index: 10000;
     pointer-events: none;
 }
@@ -22,6 +21,17 @@
     gap: 4px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.5);
     max-width: 95vw;
+    
+    /* Ajustes para Scroll Lateral */
+    overflow-x: auto;
+    white-space: nowrap;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Esconde a barra de scroll para manter o design limpo */
+.pill-nav::-webkit-scrollbar {
+    display: none;
 }
 
 .nav-pill {
@@ -36,6 +46,7 @@
     text-transform: uppercase;
     white-space: nowrap;
     transition: all 0.2s ease;
+    flex-shrink: 0; /* Impede que os botões espremam */
 }
 
 .nav-pill.active {
@@ -43,10 +54,30 @@
     color: #4ecca3;
 }
 
+/* Estilo da Bolinha de Notificação (Badge) */
+.nav-badge {
+    position: absolute;
+    top: -5px;
+    right: -4px;
+    background-color: #ff3b30;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    z-index: 10;
+    overflow: hidden;
+}
+
 /* --- Estilização Sutil da Busca --- */
 .map-search-container {
     position: absolute;
-    top: 30px; /* Busca no topo */
+    top: 30px;
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
@@ -72,7 +103,6 @@
     padding: 8px;
 }
 
-/* Ajuste solicitado: Fica levemente mais claro, sem divergência brusca */
 .map-search-glass:focus-within {
     background: rgba(45, 55, 72, 0.3); 
     border: 1px solid rgba(78, 204, 163, 0.4);

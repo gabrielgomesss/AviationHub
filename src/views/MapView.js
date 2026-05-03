@@ -10,7 +10,7 @@ export default {
             <div class="map-container">
                 <div class="map-search-container">
                     <div class="map-search-glass">
-                        <input type="text" id="icaoInput" placeholder="Ex: SBJD, SBSP..." autocomplete="off" />
+                        <input type="text" id="icaoInput" placeholder="EX: SBJD, SBSP..." autocomplete="off" />
                         <button id="buscarBtn">BUSCAR</button>
                     </div>
                 </div>
@@ -25,14 +25,14 @@ export default {
     },
 
     async after_render() {
-        // Limpeza de instância prévia do mapa para evitar bugs de re-renderização
+        // Limpeza de segurança para evitar múltiplas instâncias do Leaflet
         if (mapInstance) {
             mapInstance.off();
             mapInstance.remove();
             mapInstance = null;
         }
 
-        // Inicialização do Mapa
+        // Inicialização do mapa focada na região de operação
         mapInstance = L.map('map', { 
             zoomControl: false, 
             attributionControl: false 
@@ -40,7 +40,7 @@ export default {
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
         
-        // Garante que o mapa preencha o container corretamente após o render
+        // Ajuste de redimensionamento após renderização do DOM
         setTimeout(() => mapInstance.invalidateSize(), 300);
 
         const btnBuscar = document.getElementById("buscarBtn");
@@ -52,37 +52,31 @@ export default {
             if (!icao) return;
 
             try {
-                // Busca dados do Aeroporto e METAR
+                // Busca de dados meteorológicos via CheckWX
                 const airportData = await WeatherService.getAirportData(icao);
-                if (!airportData) return alert("ICAO não encontrado.");
+                if (!airportData) return alert("ICAO não encontrado ou erro na API.");
 
-                // Movimenta o mapa até o aeroporto
+                // Navegação no mapa até as coordenadas do aeródromo
                 mapInstance.flyTo([airportData.lat, airportData.lon], 13, { animate: true, duration: 2 });
 
-                // Atualiza o Marcador
+                // Gestão de marcadores
                 if (markerInstance) mapInstance.removeLayer(markerInstance);
                 markerInstance = L.marker([airportData.lat, airportData.lon]).addTo(mapInstance);
 
-                // Busca Hangares vinculados ao ICAO
+                // Consulta de hangares disponíveis no banco de dados
                 const hangares = await HangarService.getHangaresByIcao(icao);
                 
-                // EXTRAÇÃO DO RAW TEXT: Filtra o objeto para exibir apenas a string do METAR
-                let metarExibicao = "METAR indisponível";
-                if (airportData) {
-                    metarExibicao = airportData.raw_text || 
-                                    (airportData.metar && airportData.metar.raw_text) || 
-                                    (typeof airportData.metar === 'string' ? airportData.metar : "METAR indisponível");
-                }
+                // Extração do texto bruto (raw_text) para evitar exibição de objetos
+                const metarExibicao = airportData.raw_text || "METAR INDISPONÍVEL";
 
-                // Renderiza o conteúdo do Drawer
                 placeholder.innerHTML = this.renderDrawer(airportData, icao, hangares, metarExibicao);
                 sheet.classList.add("visible");
             } catch (err) {
-                console.error("Erro na busca AviationHub:", err);
+                console.error("Erro na operação MapView:", err);
             }
         });
 
-        // Fecha o drawer ao clicar no mapa
+        // Fechar painel ao interagir com o mapa
         mapInstance.on('click', () => sheet.classList.remove("visible"));
     },
 
@@ -103,6 +97,7 @@ export default {
                         ✕
                     </button>
 
+                    <!-- Container METAR: Ajustado para 100% da largura -->
                     <div class="metar-container">
                         <span class="metar-label">Condições Meteorológicas (METAR)</span>
                         <p class="metar-text">${metar}</p>
@@ -134,7 +129,7 @@ export default {
     }
 };
 
-// Função global para navegação entre páginas dentro do sistema AviationHub
+// Utilitário global para navegação entre módulos do AviationHub
 window.goToPage = (path) => {
     const sheet = document.getElementById("airportSheet");
     if (sheet) sheet.classList.remove("visible");

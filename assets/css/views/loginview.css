@@ -1,114 +1,154 @@
-/* Variáveis de Design - AviationHub Premium */
-:root {
-    --primary-emerald: #4ecca3;
-    --emerald-glow: rgba(78, 204, 163, 0.35);
-    --bg-deep: #0f172a;
-    --glass-bg: rgba(30, 41, 59, 0.6);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --text-light: #f8fafc;
-    --text-dim: #94a3b8;
-}
-
-/* Container Principal */
-.login-container {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: radial-gradient(circle at top right, #1e293b, #0f172a);
-    font-family: 'Inter', sans-serif;
-}
-
-/* Card com Efeito Glassmorphism */
-.login-card-glass {
-    background: var(--glass-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border);
-    border-radius: 24px;
-    padding: 45px;
+/* Container Principal: Fundo com Overlay para destaque do Card */
+.login-page {
     width: 100%;
-    max-width: 400px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)), 
+                url('https://images.unsplash.com/photo-1542296332-2e4473faf563?q=80&w=2070') no-repeat center center;
+    background-size: cover;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Card de Login: Mesma lógica de Glassmorphism do MapView Search */
+.login-card-glass {
+    width: 100%;
+    max-width: 420px;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 32px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     text-align: center;
 }
 
-/* Cabeçalho */
+/* Identidade Visual */
 .login-brand h1 {
-    color: var(--primary-emerald);
     font-size: 2.2rem;
-    font-weight: 800;
+    font-weight: 900;
+    color: #ffffff;
     margin: 0;
     letter-spacing: -1.5px;
 }
 
-.login-brand p {
-    color: var(--text-dim);
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-top: 8px;
+.login-brand h1 span {
+    color: #10b981; /* Emerald Primary */
 }
 
-/* Grupos de Input */
+.login-brand p {
+    color: #64748b;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    margin-top: 4px;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+}
+
+/* Inputs: Alinhados ao padrão da barra de busca do Mapa */
 .field-group {
     text-align: left;
-    margin-top: 25px;
+    margin-bottom: 24px;
 }
 
 .field-group label {
     display: block;
-    color: var(--text-dim);
+    color: #94a3b8;
     font-size: 0.65rem;
-    font-weight: 700;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
     margin-bottom: 8px;
     margin-left: 4px;
-    text-transform: uppercase;
 }
 
 .field-group input {
     width: 100%;
-    padding: 14px;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid var(--glass-border);
-    border-radius: 12px;
-    color: white;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 500;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
 }
 
 .field-group input:focus {
-    outline: none;
-    border-color: var(--primary-emerald);
-    box-shadow: 0 0 15px var(--emerald-glow);
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(255, 255, 255, 0.07);
+    border-color: #10b981;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
 }
 
-/* Botão de Ação */
+/* Botão: Padrão Primary Emerald do Hangar Card */
 .btn-submit-glass {
     width: 100%;
-    margin-top: 30px;
-    padding: 16px;
-    background: linear-gradient(135deg, var(--primary-emerald) 0%, #45b792 100%);
-    color: #0f172a;
+    padding: 18px;
+    background: #10b981;
+    color: #ffffff;
     border: none;
-    border-radius: 12px;
-    font-weight: 800;
+    border-radius: 16px;
     font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    font-weight: 800;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 8px;
 }
 
 .btn-submit-glass:hover {
+    background: #059669;
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px var(--emerald-glow);
+    box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
 }
 
-/* Mensagens de Erro/Status */
-#login-message {
+.btn-submit-glass:disabled {
+    background: #1e293b;
+    color: #64748b;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Mensagens de Status */
+.status-message {
+    min-height: 20px;
     margin-top: 20px;
     font-size: 0.8rem;
-    min-height: 1.2rem;
+    font-weight: 600;
+}
+
+.status-message.loading { color: #94a3b8; }
+.status-message.success { color: #10b981; }
+.status-message.error { color: #ef4444; }
+
+/* Links de Rodapé: Minimalistas */
+.login-options {
+    margin-top: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+.login-options a {
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.login-options a:hover {
+    color: #ffffff;
+}
+
+.login-options .sep {
+    color: rgba(255, 255, 255, 0.1);
 }

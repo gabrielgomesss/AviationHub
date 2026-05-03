@@ -1,39 +1,86 @@
 .dashboard-container {
-    padding: 20px;
+    max-width: 600px; /* Dashboard pode ser um pouco mais largo */
 }
 
-.dashboard-header {
+.filter-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.dashboard-stats-grid {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.stats-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-grow: 1;
+}
+
+.stat-pill {
+    padding: 12px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    background: #f8fafc;
+}
+
+.stat-pill.amber { border-left: 4px solid #f59e0b; color: #92400e; }
+.stat-pill.emerald { border-left: 4px solid #10b981; color: #065f46; }
+.stat-pill.slate { border-left: 4px solid #64748b; color: #1e293b; }
+
+.stat-pill small { font-size: 0.6rem; font-weight: 800; opacity: 0.7; }
+.stat-pill span { font-size: 1.1rem; font-weight: 800; }
+
+/* Cards de Reserva */
+.reservation-card-admin {
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
+    border-radius: 18px;
+    padding: 16px;
+    margin-bottom: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    margin-top: 20px;
+.res-info strong { display: block; font-size: 1rem; color: #1e293b; }
+.res-info small { color: #94a3b8; font-size: 0.8rem; }
+.res-dates { font-size: 0.75rem; color: #64748b; margin-top: 4px; font-weight: 600; }
+
+.btn-group-row { display: flex; gap: 8px; margin-top: 8px; }
+
+.btn-approve-icon, .btn-reject-icon {
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
 }
 
-.card {
-    padding: 15px;
+.btn-approve-icon { background: #d1fae5; color: #059669; }
+.btn-reject-icon { background: #fee2e2; color: #dc2626; }
+
+.section-divider {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 25px 0;
 }
 
-.reserva-card {
-    margin-top: 15px;
-    padding: 15px;
+[class^="badge-"] {
+    font-size: 0.65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 6px;
 }
-
-.reserva-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.badge {
-    background: red;
-    color: white;
-    border-radius: 999px;
-    padding: 3px 8px;
-    font-size: 12px;
-}
+.badge-aguardando_pagamento { background: #fef3c7; color: #b45309; }
+.badge-aprovado { background: #d1fae5; color: #065f46; }

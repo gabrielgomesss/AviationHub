@@ -4,98 +4,127 @@ export default {
 
     async render() {
         return `
-            <div>
-                <h2>Editar Hangar</h2>
-                <div id="editContainer">Carregando...</div>
+            <div id="app-navbar"></div>
+            <div class="hangar-detail-page-light">
+                <div class="bg-overlay-blur"></div>
+                
+                <div class="hangar-view-container-light">
+                    <div class="hangar-header-light">
+                        <div class="header-nav">
+                            <button class="btn-close-light" onclick="window.history.back()">✕</button>
+                        </div>
+                        <div class="header-main-info">
+                            <h2>Editar Hangar</h2>
+                            <p class="subtitle-light">Atualize as informações e tabela de preços</p>
+                        </div>
+                    </div>
+                    
+                    <div id="editContainer" class="content-section-light">
+                        <div class="loading-state">Carregando dados da unidade...</div>
+                    </div>
+                </div>
             </div>
         `;
     },
 
     async after_render() {
-
         const params = new URLSearchParams(window.location.search);
         const id = params.get("id");
+        const editContainer = document.getElementById("editContainer");
 
-        const hangar = await HangarService.getHangarById(id);
+        try {
+            const hangar = await HangarService.getHangarById(id);
 
-        if (!hangar) {
-            document.getElementById("editContainer").innerHTML = "Hangar não encontrado";
-            return;
-        }
+            if (!hangar) {
+                editContainer.innerHTML = "<div class='error-state-light'>Hangar não encontrado.</div>";
+                return;
+            }
 
-        document.getElementById("editContainer").innerHTML = `
-            <input id="nome" value="${hangar.nome}" placeholder="Nome do hangar"/>
+            editContainer.innerHTML = `
+                <div class="form-section">
+                    <h3 class="section-label-light">IDENTIFICAÇÃO</h3>
+                    <div class="input-block">
+                        <label class="field-label">NOME DO HANGAR</label>
+                        <input type="text" id="nome" class="input-field-light" value="${hangar.nome}" placeholder="Nome do hangar"/>
+                    </div>
+                </div>
 
-            <h3>Serviços</h3>
+                <div class="form-section" style="margin-top: 30px;">
+                    <h3 class="section-label-light">SERVIÇOS ATIVOS</h3>
+                    <div id="servicosContainer"></div>
+                    
+                    <button id="addServico" class="btn-add-service-dashed">
+                        <span>+</span> Adicionar novo serviço
+                    </button>
+                </div>
 
-            <div id="servicosContainer"></div>
-
-            <button id="addServico">+ Adicionar serviço</button>
-
-            <br/><br/>
-
-            <button id="salvar">Salvar alterações</button>
-        `;
-
-        const container = document.getElementById("servicosContainer");
-
-        // 🔥 Criar linha de serviço
-        const criarServico = (s = {}) => {
-
-            const div = document.createElement("div");
-            div.style.marginBottom = "10px";
-
-            div.innerHTML = `
-                <input class="nome" value="${s.nome || ''}" placeholder="Nome do serviço"/>
-
-                <input class="preco" type="number" value="${s.preco_produto || 0}" placeholder="Preço"/>
-
-                <select class="tipo">
-                    <option value="fixo" ${s.tipo === "fixo" ? "selected" : ""}>Fixo</option>
-                    <option value="diaria" ${s.tipo === "diaria" ? "selected" : ""}>Diária</option>
-                </select>
-
-                <button class="remove">X</button>
+                <div class="action-footer-light">
+                    <button id="salvar" class="btn-primary-emerald-bold">
+                        SALVAR ALTERAÇÕES
+                    </button>
+                </div>
             `;
 
-            container.appendChild(div);
+            const container = document.getElementById("servicosContainer");
 
-            div.querySelector(".remove").addEventListener("click", () => {
-                div.remove();
+            const criarServico = (s = {}) => {
+                const div = document.createElement("div");
+                div.className = "service-selection-card";
+
+                div.innerHTML = `
+                    <div class="card-header-row">
+                        <input class="nome input-field-light" value="${s.nome || ''}" placeholder="Ex: Estadia Diária"/>
+                        <button class="remover btn-remove-icon">✕</button>
+                    </div>
+
+                    <div class="date-inputs-vertical-group">
+                        <div class="input-block">
+                            <label class="field-label">PREÇO (R$)</label>
+                            <input class="preco input-field-light" type="number" value="${s.preco_produto || 0}" placeholder="0.00"/>
+                        </div>
+                        <div class="input-block">
+                            <label class="field-label">COBRANÇA</label>
+                            <select class="tipo input-field-light">
+                                <option value="fixo" ${s.tipo === "fixo" ? "selected" : ""}>Fixo</option>
+                                <option value="diaria" ${s.tipo === "diaria" ? "selected" : ""}>Diária</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(div);
+                div.querySelector(".remover").onclick = () => div.remove();
+            };
+
+            // Carrega serviços existentes
+            (hangar.servicos || []).forEach(s => {
+                criarServico({...s, tipo: s.tipo || "fixo"});
             });
-        };
 
-        // 🔥 Carregar serviços existentes
-        (hangar.servicos || []).forEach(s => {
-            criarServico({
-                ...s,
-                tipo: s.tipo || "fixo" // fallback pra não quebrar
-            });
-        });
+            document.getElementById("addServico").onclick = () => criarServico();
 
-        // 🔥 Adicionar novo serviço
-        document.getElementById("addServico").addEventListener("click", () => {
-            criarServico();
-        });
+            document.getElementById("salvar").onclick = async () => {
+                const nome = document.getElementById("nome").value;
+                const cards = container.querySelectorAll(".service-selection-card");
+                
+                const servicos = Array.from(cards).map(card => ({
+                    nome: card.querySelector(".nome").value,
+                    preco_produto: parseFloat(card.querySelector(".preco").value || 0),
+                    tipo: card.querySelector(".tipo").value
+                }));
 
-        // 🔥 Salvar alterações
-        document.getElementById("salvar").addEventListener("click", async () => {
+                try {
+                    await HangarService.updateHangar(id, { nome, servicos });
+                    alert("Configurações atualizadas com sucesso!");
+                    window.navigate('/hangares');
+                } catch (err) {
+                    alert("Erro ao salvar: " + err.message);
+                }
+            };
 
-            const nome = document.getElementById("nome").value;
-
-            const servicos = Array.from(container.children).map(div => ({
-                nome: div.querySelector(".nome").value,
-                preco_produto: parseFloat(div.querySelector(".preco").value),
-                tipo: div.querySelector(".tipo").value
-            }));
-
-            await HangarService.updateHangar(id, {
-                nome,
-                servicos
-            });
-
-            alert("Hangar atualizado com sucesso!");
-            window.navigate('/hangares');
-        });
+        } catch (err) {
+            console.error(err);
+            editContainer.innerHTML = "<div class='error-state-light'>Erro ao carregar dados.</div>";
+        }
     }
 };

@@ -1,8 +1,86 @@
-.create-hangar-container {
-    padding: 20px;
+/* Container de visualização */
+.hangar-detail-page-light {
+    position: relative;
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-x: hidden;
 }
 
-.create-hangar-form {
-    max-width: 500px;
-    margin: auto;
+/* Camada de imagem e desfoque forçado */
+.bg-overlay-blur {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Imagem de aeronave genérica de alta disponibilidade */
+    background-image: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.8)), 
+                      url('https://sttfbo.com/wp-content/uploads/2020/09/Standard-Aviation-47.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(12px); /* Desfoque forte para destacar o card branco */
+    transform: scale(1.1); /* Evita bordas brancas causadas pelo blur */
+}
+
+/* Card Branco - Agora com mais contraste */
+.hangar-view-container-light {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 480px;
+    background: #ffffff;
+    border-radius: 32px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+    margin-bottom: 80px;
+}
+
+/* Estilização interna para manter o padrão Light Glass */
+.input-field-light {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #1e293b;
+    font-weight: 600;
+    box-sizing: border-box;
+}
+
+.field-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #64748b;
+    margin-bottom: 6px;
+    display: block;
+    text-transform: uppercase;
+}
+
+.btn-primary-emerald-bold {
+    width: 100%;
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 20px;
+    border-radius: 18px;
+    font-weight: 900;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 20px;
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+}
+
+.btn-add-service-dashed {
+    width: 100%;
+    background: transparent;
+    border: 2px dashed #cbd5e1;
+    border-radius: 20px;
+    padding: 16px;
+    color: #64748b;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 15px;
 }

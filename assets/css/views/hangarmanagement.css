@@ -1,8 +1,87 @@
-.management-container {
-    padding: 20px;
+/* Estilos específicos para a lista de hangares */
+.hangar-item-card {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    border-color: #f1f5f9;
+    transition: transform 0.2s ease;
 }
 
-.hangar-card {
-    padding: 15px;
-    margin-bottom: 10px;
+.hangar-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.hangar-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.icao-badge-mini {
+    background: #e2e8f0;
+    color: #475569;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+.btn-edit-pill {
+    background: #f1f5f9;
+    color: #10b981;
+    border: 1px solid #10b981;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.btn-edit-pill:hover {
+    background: #10b981;
+    color: white;
+}
+
+/* Lista de serviços dentro do card */
+.services-list-preview ul {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0 0;
+}
+
+.services-list-preview li {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px dashed #f1f5f9;
+    font-size: 0.85rem;
+}
+
+.services-list-preview li:last-child {
+    border-bottom: none;
+}
+
+.service-name-text {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.service-price-text {
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.service-price-text small {
+    font-weight: 400;
+    color: #94a3b8;
+    margin-left: 2px;
+}
+
+.empty-state-light {
+    text-align: center;
+    padding: 40px 0;
+    color: #94a3b8;
 }

@@ -39,7 +39,7 @@ const Navbar = {
 
     after_render: () => {
         document.getElementById('nav-map')?.addEventListener('click', () => {
-            window.navigate('/mapa');
+            window.navigate('/');
         });
 
         document.getElementById('nav-create')?.addEventListener('click', () => {
@@ -50,8 +50,9 @@ const Navbar = {
             window.navigate('/hangares');
         });
 
-        document.getElementById('nav-logout')?.addEventListener('click', () => {
-            AuthService.logout();
+        document.getElementById('nav-logout')?.addEventListener('click', async () => {
+            await AuthService.logout();
+            window.navigate('/login');
         });
     }
 };

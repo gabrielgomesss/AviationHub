@@ -13,6 +13,15 @@ import {
 
 export const HangarService = {
 
+    async getHangarById(id) {
+    const ref = doc(db, "Hangares", id);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) return null;
+
+    return { id: snap.id, ...snap.data() };
+},
+
     async createHangar(nome, icao, servicos) {
         const user = auth.currentUser;
 
@@ -36,22 +45,21 @@ export const HangarService = {
         return hangarRef.id;
     },
 
+    // 🔥 FUNÇÃO QUE ESTAVA FALTANDO
     async getMyHangares() {
         const user = auth.currentUser;
 
         if (!user) throw new Error("Usuário não autenticado");
 
-        // 🔹 pega usuário
         const userSnap = await getDoc(doc(db, "users", user.uid));
         const userData = userSnap.data();
 
         const ids = userData.managed_hangars || [];
 
-        if (ids.length === 0) return [];
+        if (!ids.length) return [];
 
         const hangares = [];
 
-        // 🔹 busca cada hangar
         for (let id of ids) {
             const hangarSnap = await getDoc(doc(db, "Hangares", id));
 
@@ -64,5 +72,36 @@ export const HangarService = {
         }
 
         return hangares;
-    }
+    },
+
+    async getHangarById(id) {
+        const snap = await getDoc(doc(db, "Hangares", id));
+
+        if (!snap.exists()) throw new Error("Hangar não encontrado");
+
+        return {
+            id: snap.id,
+            ...snap.data()
+        };
+    },
+
+    async updateHangar(id, data) {
+        const user = auth.currentUser;
+
+        if (!user) throw new Error("Usuário não autenticado");
+
+        const hangarRef = doc(db, "Hangares", id);
+
+        await updateDoc(hangarRef, {
+            ...data,
+            updatedAt: serverTimestamp()
+        });
+    },
+    async getHangaresByIcao(icao) {
+    const snapshot = await getDocs(collection(db, "Hangares"));
+
+    return snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(h => h.icao.toLowerCase() === icao.toLowerCase());
+}
 };

@@ -4,7 +4,7 @@ import Navbar from '../../components/navbar.js';
 const HangarManagementView = {
 
     render: async () => `
-        ${Navbar.render()}
+        <div id="app-navbar"></div>
 
         <div style="padding:20px;">
             <h2>Meus Hangares</h2>
@@ -13,6 +13,9 @@ const HangarManagementView = {
     `,
 
     after_render: async () => {
+        // 🔹 Renderiza Navbar
+        const navbarContainer = document.getElementById('app-navbar');
+        navbarContainer.innerHTML = Navbar.render();
         Navbar.after_render();
 
         const container = document.getElementById('hangares-list');
@@ -20,26 +23,45 @@ const HangarManagementView = {
         try {
             const hangares = await HangarService.getMyHangares();
 
-            if (!hangares.length) {
+            if (!hangares || hangares.length === 0) {
                 container.innerHTML = "<p>Nenhum hangar encontrado.</p>";
                 return;
             }
 
             container.innerHTML = hangares.map(h => `
-                <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
+                <div style="
+                    border:1px solid #ccc;
+                    padding:15px;
+                    margin-bottom:15px;
+                    border-radius:8px;
+                ">
                     <h3>${h.nome}</h3>
                     <p><b>ICAO:</b> ${h.icao}</p>
 
-                    <ul>
-                        ${h.servicos.map(s => `
-                            <li>${s.nome} - R$ ${s.preco_produto}</li>
-                        `).join('')}
-                    </ul>
+                    <div style="margin-top:10px;">
+                        <b>Serviços:</b>
+                        <ul>
+                            ${h.servicos.map(s => `
+                                <li>${s.nome} - R$ ${s.preco_produto}</li>
+                            `).join('')}
+                        </ul>
+                    </div>
+
+                    <div style="margin-top:10px;">
+                        <button onclick="window.navigate('/edit-hangar?id=${h.id}')">
+                            Editar
+                        </button>
+                    </div>
                 </div>
             `).join('');
 
         } catch (err) {
-            container.innerHTML = `<p style="color:red;">Erro ao carregar hangares</p>`;
+            console.error(err);
+            container.innerHTML = `
+                <p style="color:red;">
+                    Erro ao carregar hangares
+                </p>
+            `;
         }
     }
 };

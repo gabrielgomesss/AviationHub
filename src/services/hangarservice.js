@@ -1,44 +1,53 @@
+import { db } from "./firebase-config.js";
 import {
-    db,
-    collection,
-    addDoc,
-    getDocs,
-    getDoc,
-    doc,
-    updateDoc,
-    query,
-    where
-} from './firebase-config.js';
+  collection,
+  getDocs,
+  query,
+  where,
+  doc,
+  getDoc
+} from "firebase/firestore";
 
-import { AuthService } from './authservice.js';
+/**
+ * Busca hangar por ID
+ */
+async function getHangarById(id) {
+  if (!id) return null;
 
-const COLLECTION = "Hangares";
+  const ref = doc(db, "Hangares", id);
+  const snap = await getDoc(ref);
 
-const HangarService = {
+  if (!snap.exists()) return null;
 
-    async getHangaresByICAO(icao) {
-        try {
+  return {
+    id: snap.id,
+    ...snap.data()
+  };
+}
 
-            console.log("DB CHECK:", db);
+/**
+ * Busca hangares por ICAO
+ */
+async function getHangaresByICAO(icao) {
+  if (!icao) return [];
 
-            const q = query(
-                collection(db, COLLECTION),
-                where("icao", "==", icao.toUpperCase())
-            );
+  const q = query(
+    collection(db, "Hangares"),
+    where("icao", "==", icao)
+  );
 
-            const snapshot = await getDocs(q);
+  const snap = await getDocs(q);
 
-            return snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+  return snap.docs.map((d) => ({
+    id: d.id,
+    ...d.data()
+  }));
+}
 
-        } catch (err) {
-            console.error("🔥 ERRO REAL:", err);
-            return [];
-        }
-    }
-
+/**
+ * Export único do service (PADRÃO CONSISTENTE)
+ */
+export const HangarService = {
+  getHangarById,
+  getHangaresByICAO
 };
-
-export { HangarService };

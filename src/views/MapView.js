@@ -1,4 +1,7 @@
 import { HangarService } from '../services/hangarservice.js';
+import { db, collection } from "../services/firebase-config.js";
+
+const ref = collection(db, "Hangares");
 
 let map;
 let marker;
@@ -157,6 +160,7 @@ export default {
 
             } catch (err) {
                 console.error(err);
+                console.log("db =", db);
                 openDrawer(`<p>Erro ao buscar hangares.</p>`);
             }
         });

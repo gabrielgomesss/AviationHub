@@ -6,8 +6,10 @@ import {
     collection,
     query,
     where,
-    getDocs
-} from "firebase/firestore";
+    onSnapshot
+} from "../src/services/firebase-config.js";
+
+let unsubscribeReservas = null;
 
 const Navbar = {
 
@@ -37,7 +39,18 @@ const Navbar = {
                         ? `
                             <button id="nav-create">Criar Hangar</button>
                             <button id="nav-manage">Meus Hangares</button>
-                            <button id="nav-dashboard">Dashboard Hangar</button>
+
+                            <button id="nav-dashboard">
+                                Dashboard
+                                <span id="badge" style="
+                                    background:red;
+                                    border-radius:10px;
+                                    padding:2px 6px;
+                                    margin-left:6px;
+                                    font-size:12px;
+                                    display:none;
+                                ">0</span>
+                            </button>
                           `
                         : ''
                     }
@@ -48,7 +61,7 @@ const Navbar = {
         `;
     },
 
-    after_render: () => {
+    after_render: async () => {
 
         document.getElementById('nav-map')?.addEventListener('click', () => {
             window.navigate('/');
@@ -62,40 +75,46 @@ const Navbar = {
             window.navigate('/hangares');
         });
 
-        // =========================
-        // 🔥 DASHBOARD CORRIGIDO (FIRESTORE REAL)
-        // =========================
-document.getElementById('nav-dashboard')?.addEventListener('click', async () => {
-
-    try {
-
-        const user = AuthService.getUser();
-
-        if (!user?.uid) {
-            alert("Usuário não autenticado.");
-            return;
-        }
-
-        const hangares = await HangarService.getMyHangares();
-
-        if (!hangares.length) {
-            alert("Você não possui hangares vinculados.");
-            return;
-        }
-
-        const hangar = hangares[0];
-
-        window.navigate(`/hangar-dashboard?hangarId=${hangar.id}`);
-
-    } catch (err) {
-        console.error("Navbar dashboard error:", err);
-        alert("Erro ao abrir dashboard.");
-    }
-});
-
         document.getElementById('nav-logout')?.addEventListener('click', async () => {
             await AuthService.logout();
             window.navigate('/login');
+        });
+
+        // 🔥 BADGE EM TEMPO REAL
+        const user = AuthService.getUser();
+
+        if (!user?.uid) return;
+
+        const hangares = await HangarService.getMyHangares();
+
+        if (!hangares.length) return;
+
+        const hangarIds = hangares.map(h => h.id);
+
+        const q = query(
+            collection(db, "reservas"),
+            where("hangarId", "in", hangarIds),
+            where("status", "==", "aguardando_pagamento")
+        );
+
+        const badge = document.getElementById("badge");
+
+        unsubscribeReservas = onSnapshot(q, (snapshot) => {
+
+            const count = snapshot.size;
+
+            if (count > 0) {
+                badge.style.display = "inline-block";
+                badge.innerText = count;
+            } else {
+                badge.style.display = "none";
+            }
+        });
+
+        document.getElementById('nav-dashboard')?.addEventListener('click', async () => {
+
+            const hangar = hangares[0];
+            window.navigate(`/hangar-dashboard?hangarId=${hangar.id}`);
         });
     }
 };

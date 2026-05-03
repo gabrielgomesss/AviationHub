@@ -11,6 +11,7 @@ import {
     query,
     arrayUnion,
     serverTimestamp,
+    onSnapshot,
     where
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -53,6 +54,7 @@ export {
     updateDoc,
     query,
     arrayUnion,
+    onSnapshot,
     where,
 
     // auth

@@ -1,24 +1,38 @@
 import { db } from "../services/firebase-config.js";
 
 import {
-    doc,
     collection,
     query,
     where,
     getDocs,
-    updateDoc
+    updateDoc,
+    doc,
+    onSnapshot
 } from "../services/firebase-config.js";
 
 import { HangarService } from "../services/hangarservice.js";
 
 let isLoading = false;
+let unsubscribeNotif = null;
 
 export default {
 
     async render() {
         return `
             <div>
-                <h2>Dashboard do Hangar</h2>
+                <h2>
+                    Dashboard do Hangar
+                    <span id="notifBadge" style="
+                        background:red;
+                        color:white;
+                        border-radius:50%;
+                        padding:4px 10px;
+                        font-size:12px;
+                        display:none;
+                        margin-left:10px;
+                    ">0</span>
+                </h2>
+
                 <div id="dashboardContent">Carregando...</div>
             </div>
         `;
@@ -27,6 +41,7 @@ export default {
     async after_render() {
 
         const container = document.getElementById("dashboardContent");
+        const badge = document.getElementById("notifBadge");
 
         if (isLoading) return;
         isLoading = true;
@@ -58,32 +73,53 @@ export default {
             const select = document.getElementById("hangarSelect");
             const dataContainer = document.getElementById("dashboardData");
 
+            // =========================
+            // 🔥 NOTIFICAÇÃO EM TEMPO REAL
+            // =========================
+            const iniciarNotificacao = (hangarId) => {
+
+                if (unsubscribeNotif) {
+                    unsubscribeNotif();
+                }
+
+                const q = query(
+                    collection(db, "reservas"),
+                    where("hangarId", "==", hangarId),
+                    where("status", "==", "aguardando_pagamento")
+                );
+
+                unsubscribeNotif = onSnapshot(q, (snapshot) => {
+
+                    const count = snapshot.size;
+
+                    if (count > 0) {
+                        badge.style.display = "inline-block";
+                        badge.innerText = count;
+                    } else {
+                        badge.style.display = "none";
+                    }
+                });
+            };
+
+            // =========================
+            // 🔥 CARREGAR RESERVAS
+            // =========================
             const carregar = async (hangarId) => {
 
                 const hangar = hangares.find(h => h.id === hangarId);
                 if (!hangar) return;
 
-                let reservas = [];
+                const q = query(
+                    collection(db, "reservas"),
+                    where("hangarId", "==", hangarId)
+                );
 
-                try {
+                const snap = await getDocs(q);
 
-                    // ✅ CORREÇÃO AQUI: hangarId (não "hangar")
-                    const q = query(
-                        collection(db, "reservas"),
-                        where("hangarId", "==", hangarId)
-                    );
-
-                    const snap = await getDocs(q);
-
-                    reservas = snap.docs.map(d => ({
-                        id: d.id,
-                        ...d.data()
-                    }));
-
-                } catch (err) {
-                    console.error("Erro ao buscar reservas:", err);
-                    reservas = [];
-                }
+                const reservas = snap.docs.map(d => ({
+                    id: d.id,
+                    ...d.data()
+                }));
 
                 dataContainer.innerHTML = `
                     <h3>${hangar.nome}</h3>
@@ -103,7 +139,6 @@ export default {
                                 <p><b>Início:</b> ${r.dataInicio || '-'}</p>
                                 <p><b>Fim:</b> ${r.dataFim || '-'}</p>
                                 <p><b>Status:</b> ${r.status}</p>
-                                <p><b>Total:</b> R$ ${r.valorTotal ?? 0}</p>
 
                                 <button class="approve" data-id="${r.id}">Aprovar</button>
                                 <button class="reject" data-id="${r.id}">Recusar</button>
@@ -118,7 +153,6 @@ export default {
                             status: "aprovado"
                         });
 
-                        alert("Reserva aprovada");
                         carregar(hangarId);
                     });
                 });
@@ -129,17 +163,24 @@ export default {
                             status: "recusado"
                         });
 
-                        alert("Reserva recusada");
                         carregar(hangarId);
                     });
                 });
             };
 
+            // =========================
+            // 🔥 EVENTO SELECT
+            // =========================
             select.addEventListener("change", (e) => {
                 carregar(e.target.value);
+                iniciarNotificacao(e.target.value);
             });
 
+            // =========================
+            // 🔥 INIT
+            // =========================
             carregar(hangares[0].id);
+            iniciarNotificacao(hangares[0].id);
 
         } catch (err) {
             console.error("Erro no dashboard:", err);

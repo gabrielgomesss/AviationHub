@@ -15,7 +15,7 @@ export default {
                     </div>
                 </div>
 
-                <div id="map"></div>
+                <div id="map" style="height: 100vh; width: 100%;"></div>
 
                 <div id="airportSheet" class="airport-bottom-sheet">
                     <div id="sheet-content-placeholder"></div>
@@ -25,14 +25,14 @@ export default {
     },
 
     async after_render() {
-        // Limpeza de segurança para evitar múltiplas instâncias do Leaflet
+        // 1. Limpeza de segurança para evitar múltiplas instâncias do Leaflet
         if (mapInstance) {
             mapInstance.off();
             mapInstance.remove();
             mapInstance = null;
         }
 
-        // Inicialização do mapa focada na região de operação
+        // 2. Inicialização do mapa
         mapInstance = L.map('map', { 
             zoomControl: false, 
             attributionControl: false 
@@ -47,26 +47,28 @@ export default {
         const sheet = document.getElementById("airportSheet");
         const placeholder = document.getElementById("sheet-content-placeholder");
 
+        // 3. Função Global de Navegação para os detalhes do Hangar (dentro do escopo da SPA)[cite: 4, 6]
+        window.openHangarDetails = (id) => {
+            sheet.classList.remove("visible");
+            setTimeout(() => {
+                window.location.hash = `#/hangar?id=${id}`; // Navegação via Hash
+            }, 300);
+        };
+
         btnBuscar.addEventListener("click", async () => {
             const icao = document.getElementById("icaoInput").value.trim().toUpperCase();
             if (!icao) return;
 
             try {
-                // Busca de dados meteorológicos via CheckWX
                 const airportData = await WeatherService.getAirportData(icao);
                 if (!airportData) return alert("ICAO não encontrado ou erro na API.");
 
-                // Navegação no mapa até as coordenadas do aeródromo
                 mapInstance.flyTo([airportData.lat, airportData.lon], 13, { animate: true, duration: 2 });
 
-                // Gestão de marcadores
                 if (markerInstance) mapInstance.removeLayer(markerInstance);
                 markerInstance = L.marker([airportData.lat, airportData.lon]).addTo(mapInstance);
 
-                // Consulta de hangares disponíveis no banco de dados
                 const hangares = await HangarService.getHangaresByIcao(icao);
-                
-                // Extração do texto bruto (raw_text) para evitar exibição de objetos
                 const metarExibicao = airportData.raw_text || "METAR INDISPONÍVEL";
 
                 placeholder.innerHTML = this.renderDrawer(airportData, icao, hangares, metarExibicao);
@@ -76,14 +78,12 @@ export default {
             }
         });
 
-        // Fechar painel ao interagir com o mapa
         mapInstance.on('click', () => sheet.classList.remove("visible"));
     },
 
     renderDrawer(airport, icao, hangares, metar) {
         return `
             <div class="drawer-header-sticky">
-                
                 <div class="drawer-header-content">
                     <div class="header-text-group">
                         <h2 style="margin:0; color:#0f172a; font-size:1.3rem; font-weight:800; line-height: 1.2;">
@@ -96,7 +96,6 @@ export default {
                         ✕
                     </button>
 
-                    <!-- Container METAR: Ajustado para 100% da largura -->
                     <div class="metar-container">
                         <span class="metar-label">Condições Meteorológicas (METAR)</span>
                         <p class="metar-text">${metar}</p>
@@ -115,7 +114,7 @@ export default {
                             <strong style="display:block; color:#1e293b; font-size:1.05rem;">${h.nome}</strong>
                         </div>
                         <div class="pill-actions">
-                            <button class="btn-action secondary" onclick="window.goToPage('/hangar?id=${h.id}')">Detalhes</button>
+                            <button class="btn-action secondary" onclick="window.openHangarDetails('${h.id}')">Detalhes</button>
                         </div>
                     </div>
                 `).join("") : `
@@ -126,15 +125,4 @@ export default {
             </div>
         `;
     }
-};
-
-// Utilitário global para navegação entre módulos do AviationHub
-window.goToPage = (path) => {
-    const sheet = document.getElementById("airportSheet");
-    if (sheet) sheet.classList.remove("visible");
-    
-    setTimeout(() => {
-        if (window.navigate) window.navigate(path);
-        else window.location.hash = path;
-    }, 300);
 };

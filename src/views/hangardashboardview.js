@@ -135,6 +135,19 @@ export default {
                         metrics.totalValor += Number(r.valorTotal || 0);
                     } else if (r.status === "recusado") metrics.recusado++;
                 });
+                const formatarDataHora = (isoString) => {
+    if (!isoString) return "---";
+    const data = new Date(isoString);
+    
+    // Formata para: 04/05/2026 10:33
+    return data.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
 
                 statsBox.innerHTML = `
                     <div class="stat-pill amber">
@@ -160,9 +173,20 @@ export default {
                             <div class="res-info">
                                 <strong>${r.prefixoAviao || 'S/P'}</strong>
                                 <small>${r.userEmail}</small>
-                                <div class="res-dates">${r.dataInicio} ➜ ${r.dataFim}</div>
+                                <!-- Datas formatadas para o padrão BR -->
+    <div class="res-dates" style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">
+        <i class="far fa-calendar-alt"></i> ${formatarDataHora(r.dataInicio)} 
+        <span style="margin: 0 5px;">➜</span> 
+        ${formatarDataHora(r.dataFim)}
+    </div>
+                                <!-- Mapeia a lista de serviços -->
+    <div class="res-services" style="font-size: 0.8rem; color: #10b981; font-weight: bold; margin-top: 4px;">
+        ${r.servicos && r.servicos.length > 0 
+            ? r.servicos.map(s => `<span>${s.nome}</span>`).join(', ') 
+            : 'Nenhum serviço'}
+    </div>
                             </div>
-                            <div class="res-actions">
+                            <div class="res-actions" style="text-align:left;">
                                 <span class="badge-${r.status}">${r.status.replace('_', ' ')}</span>
                                 <div class="btn-group-row">
                                     <button class="btn-approve-icon approve" data-id="${r.id}">✓</button>

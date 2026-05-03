@@ -4,15 +4,14 @@ import {
     addDoc,
     query,
     where,
-    getDocs
+    getDocs,
+    onSnapshot // Importado para o real-time do badge
 } from "../services/firebase-config.js";
 
 export const ReservaService = {
 
     async criarReserva(reserva) {
-
         try {
-
             // =========================
             // VALIDAÇÃO
             // =========================
@@ -28,9 +27,7 @@ export const ReservaService = {
             let dataInicio = reserva.dataInicio;
             let dataFim = reserva.dataFim;
 
-            // se não vier data, tenta montar pelos serviços
             if (!dataInicio || !dataFim) {
-
                 const datas = reserva.servicos
                     .filter(s => s.inicio && s.fim)
                     .map(s => ({
@@ -42,7 +39,6 @@ export const ReservaService = {
                     dataInicio = new Date(Math.min(...datas.map(d => d.inicio.getTime())));
                     dataFim = new Date(Math.max(...datas.map(d => d.fim.getTime())));
                 } else {
-                    // fallback seguro
                     const now = new Date();
                     dataInicio = now;
                     dataFim = new Date(now.getTime() + 3600000); // +1h
@@ -50,7 +46,7 @@ export const ReservaService = {
             }
 
             // =========================
-            // CONFLITO
+            // CONFLITO[cite: 7]
             // =========================
             const conflitos = await this.verificarConflito(
                 reserva.hangarId,
@@ -63,26 +59,19 @@ export const ReservaService = {
             }
 
             // =========================
-            // NORMALIZAÇÃO
+            // NORMALIZAÇÃO[cite: 7]
             // =========================
             const reservaFinal = {
                 hangarId: reserva.hangarId,
-
                 userId: reserva.userId,
                 userName: reserva.userName || "",
                 userEmail: reserva.userEmail || "",
-
-                prefixoAviao: reserva.prefixoAviao || "",
-
+                prefixoAviao: (reserva.prefixoAviao || "").toUpperCase(),
                 servicos: reserva.servicos,
-
                 valorTotal: reserva.valorTotal || 0,
-
                 dataInicio: dataInicio.toISOString(),
                 dataFim: dataFim.toISOString(),
-
                 status: reserva.status || "aguardando_pagamento",
-
                 createdAt: new Date().toISOString()
             };
 
@@ -95,7 +84,6 @@ export const ReservaService = {
     },
 
     async verificarConflito(hangarId, inicio, fim) {
-
         const q = query(
             collection(db, "reservas"),
             where("hangarId", "==", hangarId)
@@ -104,9 +92,7 @@ export const ReservaService = {
         const snapshot = await getDocs(q);
 
         for (const d of snapshot.docs) {
-
             const r = d.data();
-
             const inicioExistente = new Date(r.dataInicio);
             const fimExistente = new Date(r.dataFim);
 
@@ -117,7 +103,19 @@ export const ReservaService = {
                 return true;
             }
         }
-
         return false;
+    },
+
+    // --- NOVA FUNÇÃO PARA O BADGE (REAL-TIME) ---[cite: 7]
+    listenReservasPorStatus(status, callback) {
+        const q = query(
+            collection(db, "reservas"),
+            where("status", "==", status)
+        );
+        
+        return onSnapshot(q, (snapshot) => {
+            const reservas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            callback(reservas);
+        });
     }
 };

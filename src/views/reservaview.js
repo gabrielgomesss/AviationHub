@@ -29,7 +29,10 @@ export default {
 
     async after_render() {
         try {
-            const params = new URLSearchParams(window.location.search);
+            // Captura de parâmetros via Hash
+            const hash = window.location.hash;
+            const queryString = hash.includes('?') ? hash.split('?')[1] : "";
+            const params = new URLSearchParams(queryString);
             const hangarId = params.get("hangarId");
             const container = document.getElementById("reservaContainer");
 
@@ -45,6 +48,10 @@ export default {
                 return;
             }
 
+            // Tratamento de data mínima (agora) para os inputs
+            const agora = new Date();
+            const dataMinima = agora.toISOString().slice(0, 16); 
+
             document.getElementById("hangar-name-badge").innerHTML = `
                 <span class="icao-badge-light">${hangar.nome}</span>
             `;
@@ -59,14 +66,10 @@ export default {
                     </button>
                 </div>
 
-                <!-- Card de Total Premium -->
                 <div class="total-summary-card-premium">
                     <div class="total-info">
-                        <span class="total-label-light">VALOR TOTAL </span>
+                        <span class="total-label-light">VALOR TOTAL ESTIMADO</span>
                         <h3 id="precoTotal" class="total-value-highlight">R$ 0,00</h3>
-                    </div>
-                    <div class="total-icon">
-                        <span class="material-icons"></span>
                     </div>
                 </div>
 
@@ -90,14 +93,24 @@ export default {
 
                     const preco = parseFloat(option.dataset.preco || 0);
                     const tipo = option.dataset.tipo;
-                    const inicio = bloco.querySelector(".inicioServico").value;
-                    const fim = bloco.querySelector(".fimServico").value;
+                    const inicioInput = bloco.querySelector(".inicioServico");
+                    const fimInput = bloco.querySelector(".fimServico");
+
+                    // Validação visual de inconsistência de horário
+                    if (inicioInput.value && fimInput.value) {
+                        if (new Date(fimInput.value) < new Date(inicioInput.value)) {
+                            fimInput.style.border = "2px solid #ef4444";
+                        } else {
+                            fimInput.style.border = "1px solid #e2e8f0";
+                        }
+                    }
 
                     let multiplicador = 1;
-                    if (inicio && fim && tipo === "diaria") {
-                        const ini = new Date(inicio);
-                        const end = new Date(fim);
+                    if (inicioInput.value && fimInput.value && tipo === "diaria") {
+                        const ini = new Date(inicioInput.value);
+                        const end = new Date(fimInput.value);
                         if (end > ini) {
+                            // Cálculo de diárias: diferença de milissegundos convertida em dias
                             multiplicador = Math.ceil((end - ini) / (1000 * 60 * 60 * 24));
                         }
                     }
@@ -125,17 +138,27 @@ export default {
 
                     <div class="date-inputs-vertical-group">
                         <div class="input-block">
-                            <label class="field-label">INÍCIO</label>
-                            <input type="datetime-local" class="inicioServico input-field-light"/>
+                            <label class="field-label">DATA/HORA INÍCIO</label>
+                            <input type="datetime-local" class="inicioServico input-field-light" min="${dataMinima}"/>
                         </div>
                         <div class="input-block">
-                            <label class="field-label">FIM (PARA DIÁRIAS)</label>
-                            <input type="datetime-local" class="fimServico input-field-light"/>
+                            <label class="field-label">DATA/HORA FIM</label>
+                            <input type="datetime-local" class="fimServico input-field-light" min="${dataMinima}"/>
                         </div>
                     </div>
                 `;
 
-                servicosContainer.appendChild(div);
+                const inicioInput = div.querySelector(".inicioServico");
+                const fimInput = div.querySelector(".fimServico");
+
+                // Tratamento dinâmico: Fim não pode ser antes do início[cite: 7]
+                inicioInput.addEventListener("change", () => {
+                    fimInput.min = inicioInput.value;
+                    if (fimInput.value && fimInput.value < inicioInput.value) {
+                        fimInput.value = inicioInput.value;
+                    }
+                    calcularTotal();
+                });
 
                 div.querySelector(".remover").onclick = () => {
                     div.remove();
@@ -146,6 +169,7 @@ export default {
                     i.addEventListener("change", calcularTotal)
                 );
                 
+                servicosContainer.appendChild(div);
                 calcularTotal();
             };
 
@@ -164,13 +188,16 @@ export default {
                     const blocos = document.querySelectorAll(".service-selection-card");
                     let valorTotal = 0;
 
-                    const servicos = Array.from(blocos).map(bloco => {
+                    const servicosValidados = Array.from(blocos).map(bloco => {
                         const select = bloco.querySelector(".servicoSelect");
                         const option = select.selectedOptions[0];
-                        const preco = parseFloat(option.dataset.preco);
-                        const tipo = option.dataset.tipo;
                         const inicio = bloco.querySelector(".inicioServico").value;
                         const fim = bloco.querySelector(".fimServico").value;
+
+                        if (!inicio) throw new Error(`Informe o início para: ${select.value}`);
+
+                        const preco = parseFloat(option.dataset.preco);
+                        const tipo = option.dataset.tipo;
 
                         let multiplicador = 1;
                         if (inicio && fim && tipo === "diaria") {
@@ -190,14 +217,15 @@ export default {
                         userId: user.uid,
                         userEmail: user.email,
                         userName: user.displayName || "",
-                        prefixoAviao: prefixo,
-                        servicos,
+                        prefixoAviao: prefixo.toUpperCase(),
+                        servicos: servicosValidados,
                         valorTotal,
-                        status: "aguardando_pagamento"
+                        status: "aguardando_pagamento",
+                        dataCriacao: new Date().toISOString()
                     });
 
-                    alert("Reserva criada com sucesso!");
-                    window.navigate("/");
+                    alert("Reserva confirmada! Verifique seu e-mail para instruções de pagamento.");
+                    window.location.hash = "#/";
 
                 } catch (err) {
                     alert(err.message);
@@ -205,8 +233,8 @@ export default {
             };
 
         } catch (err) {
-            console.error("Erro view reserva:", err);
-            document.getElementById("reservaContainer").innerHTML = "Erro ao carregar reserva.";
+            console.error("Erro na view reserva:", err);
+            document.getElementById("reservaContainer").innerHTML = "Erro ao carregar formulário de reserva.";
         }
     }
 };

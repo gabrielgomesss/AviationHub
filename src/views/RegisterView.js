@@ -67,7 +67,7 @@ const RegisterView = {
 
         goLogin.addEventListener('click', (e) => {
             e.preventDefault();
-            window.navigate('/login');
+            window.location.hash = `#/`;
         });
 
         form.addEventListener('submit', async (e) => {
@@ -85,7 +85,7 @@ const RegisterView = {
 
             try {
                 await AuthService.register(name, email, password, role);
-                window.navigate('/');
+                window.location.hash = `#/`;
             } catch (err) {
                 error.innerText = err.message;
             }

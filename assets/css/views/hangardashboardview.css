@@ -79,8 +79,7 @@
     font-size: 0.65rem;
     font-weight: 900;
     text-transform: uppercase;
-    padding: 4px 8px;
     border-radius: 6px;
 }
-.badge-aguardando_pagamento { background: #fef3c7; color: #b45309; }
-.badge-aprovado { background: #d1fae5; color: #065f46; }
+.badge-aguardando_pagamento { color: #b45309; }
+.badge-aprovado { color: #065f46; }

@@ -19,12 +19,27 @@ const HangarView = {
             await Navbar.after_render();
         }
 
-        const params = new URLSearchParams(window.location.search);
+        // --- CORREÇÃO AQUI: Capturando o ID do Hash em vez da URL tradicional ---
+        const hash = window.location.hash; // Pega ex: #/hangar?id=123
+        const queryString = hash.includes('?') ? hash.split('?')[1] : "";
+        const params = new URLSearchParams(queryString);
         const hangarId = params.get('id');
+        // -----------------------------------------------------------------------
+
         const container = document.getElementById('hangar-container');
+
+        if (!hangarId) {
+            container.innerHTML = "<div class='error-state-light'>ID do hangar não identificado.</div>";
+            return;
+        }
 
         try {
             const hangar = await HangarService.getHangarById(hangarId);
+
+            if (!hangar) {
+                container.innerHTML = "<div class='error-state-light'>Hangar não encontrado.</div>";
+                return;
+            }
 
             container.innerHTML = `
                 <div class="hangar-header-light">
@@ -33,14 +48,14 @@ const HangarView = {
                     </div>
                     <div class="header-main-info">
                         <h2>${hangar.nome}</h2>
-                        <span class="icao-badge-light">${hangar.icao}</span>
-                        </div>
+                        <span class="icao-badge-light">${hangar.icao || '---'}</span>
+                    </div>
                 </div>
 
                 <div class="content-section-light">
                     <h3 class="section-label-light">SERVIÇOS DISPONÍVEIS</h3>
                     <div class="services-stack">
-                        ${hangar.servicos.map(s => `
+                        ${hangar.servicos && hangar.servicos.length > 0 ? hangar.servicos.map(s => `
                             <div class="service-card-light">
                                 <div class="service-info-group">
                                     <span class="status-indicator">DISPONÍVEL</span>
@@ -50,17 +65,18 @@ const HangarView = {
                                     R$ ${s.preco_produto}
                                 </div>
                             </div>
-                        `).join('')}
+                        `).join('') : '<p>Nenhum serviço cadastrado.</p>'}
                     </div>
                 </div>
 
                 <div class="action-footer-light">
-                    <button class="btn-primary-emerald-bold" onclick="window.navigate('/reserva?hangarId=${hangar.id}')">
+                    <button class="btn-primary-emerald-bold" onclick="window.location.hash = '#/reserva?hangarId=${hangarId}'">
                         RESERVAR AGORA
                     </button>
                 </div>
             `;
-        } catch {
+        } catch (error) {
+            console.error("Erro ao carregar hangar:", error);
             container.innerHTML = "<div class='error-state-light'>Erro ao carregar dados do hangar</div>";
         }
     }

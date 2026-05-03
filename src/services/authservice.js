@@ -74,6 +74,7 @@ export const AuthService = {
     currentUser = null;
 
     // 🔥 redireciona depois que limpou
-    window.navigate('/');
+    window.location.hash === '#/'
+    
 }
 };

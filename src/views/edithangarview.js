@@ -3,7 +3,6 @@ import { HangarService } from "../services/hangarservice.js";
 export default {
     async render() {
         return `
-            <div id="app-navbar"></div>
             <div class="hangar-page-layout">
                 <!-- Overlay para fechar ao clicar fora ou focar na edição -->
                 <div class="page-overlay" onclick="window.history.back()"></div>
@@ -26,12 +25,15 @@ export default {
     },
 
     async after_render() {
-        const params = new URLSearchParams(window.location.search);
+        // AJUSTE: Em SPAs com Hash, os parâmetros ficam após o '?' dentro do hash
+        const hashParts = window.location.hash.split('?');
+        const params = new URLSearchParams(hashParts[1] || "");
         const id = params.get("id");
         const editContainer = document.getElementById("editContainer");
 
         if (!id) {
-            window.navigate('/hangares');
+            console.error("ID não fornecido na URL");
+            window.location.hash = '#/hangares';
             return;
         }
 
@@ -42,7 +44,7 @@ export default {
                 editContainer.innerHTML = `
                     <div style="text-align:center; padding:40px;">
                         <p style="color:#ef4444; font-weight:800;">Hangar não encontrado.</p>
-                        <button onclick="window.history.back()" class="btn-primary-emerald-bold" style="margin-top:20px;">VOLTAR</button>
+                        <button onclick="window.location.hash = '#/hangares'" class="btn-primary-emerald-bold" style="margin-top:20px;">VOLTAR</button>
                     </div>`;
                 return;
             }
@@ -125,23 +127,21 @@ export default {
                 try {
                     await HangarService.updateHangar(id, { nome, servicos });
                     alert("Configurações atualizadas com sucesso!");
-                    window.navigate('/hangares');
+                    window.location.hash = '#/hangares';
                 } catch (err) {
                     alert("Erro ao salvar: " + err.message);
                 }
             };
 
-            // Lógica de Deletar (Opcional, mas recomendado para o Admin)
             document.getElementById("deletarHangar").onclick = async () => {
                 if(confirm("Tem certeza que deseja remover este hangar permanentemente?")) {
-                    // Implementar HangarService.deleteHangar(id) se necessário
-                    alert("Operação bloqueada: Implemente a deleção no Service.");
+                    alert("Função de exclusão em desenvolvimento.");
                 }
             };
 
         } catch (err) {
             console.error(err);
-            editContainer.innerHTML = "<div class='error-state-light'>Erro ao sincronizar dados da aeronave.</div>";
+            editContainer.innerHTML = "<div class='error-state-light'>Erro ao sincronizar dados.</div>";
         }
     }
 };

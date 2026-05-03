@@ -1,193 +1,212 @@
-/* --- Unificação de Menu Único no Rodapé --- */
-.bottom-nav-container {
-    position: fixed;
-    bottom: 30px; /* Posicionado na parte inferior */
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    z-index: 10000;
-    pointer-events: none;
-}
-
-.pill-nav {
-    pointer-events: auto;
-    background: rgba(30, 41, 59, 0.85);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 6px 10px;
-    border-radius: 50px;
-    display: flex;
-    gap: 4px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-    max-width: 95vw;
-}
-
-.nav-pill {
-    background: transparent;
-    border: none;
-    color: #94a3b8;
-    padding: 10px 16px;
-    border-radius: 40px;
-    font-weight: 600;
-    font-size: 0.75rem;
-    cursor: pointer;
-    text-transform: uppercase;
-    white-space: nowrap;
-    transition: all 0.2s ease;
-}
-
-.nav-pill.active {
-    background: rgba(255, 255, 255, 0.12);
-    color: #4ecca3;
-}
-
-/* --- Estilização Sutil da Busca --- */
-.map-search-container {
-    position: absolute;
-    top: 30px; /* Busca no topo */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 420px;
-    z-index: 1001;
-}
-
-.map-search-glass {
-    background: rgba(30, 41, 59, 0.8);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 6px 12px;
-    border-radius: 14px;
-    display: flex;
-    transition: background 0.3s ease;
-}
-
-.map-search-glass input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: white;
-    outline: none;
-    padding: 8px;
-}
-
-/* Ajuste solicitado: Fica levemente mais claro, sem divergência brusca */
-.map-search-glass:focus-within {
-    background: rgba(45, 55, 72, 0.9); 
-    border: 1px solid rgba(78, 204, 163, 0.4);
-}
-
-.map-search-glass button {
-    background: #4ecca3;
-    border: none;
-    color: #1a202c;
-    padding: 0 18px;
-    border-radius: 10px;
-    font-weight: 800;
-    cursor: pointer;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-}
-
-/* Garante que o container do mapa ocupe a tela toda */
+/* Container e Mapa */
 .map-container {
     position: relative;
     width: 100%;
-    height: 100vh; /* Altura total da viewport */
-    background-color: #1a1a1a; /* Cor de fundo caso o mapa demore a carregar */
+    height: 100vh;
+    background-color: #0f172a;
 }
 
 #map {
     width: 100%;
-    height: 100%; /* O mapa ocupa 100% do .map-container */
+    height: 100%;
     z-index: 1;
 }
 
-/* Ajuste de profundidade para os elementos sobre o mapa */
+/* Busca Glassmorphism */
 .map-search-container {
+    position: absolute;
+    top: env(safe-area-inset-top, 20px);
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 1000;
+    width: 90%;
+    max-width: 450px;
 }
 
-.airport-bottom-sheet {
-    z-index: 99999;
+.map-search-glass {
+    display: flex;
+    gap: 12px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
-/* Bottom Sheet - Ajuste de cores para fundo claro */
+.map-search-glass input {
+    flex: 1;
+    border: none;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #1e293b;
+    font-weight: 500;
+    outline: none;
+    font-size: 1rem;
+}
+
+.map-search-glass button {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+/* Bottom Sheet Premium */
 .airport-bottom-sheet {
     position: fixed;
     left: 50%;
     bottom: -100%;
     transform: translateX(-50%);
-    width: 100%; /* Ocupa a largura total no mobile */
-    max-width: 500px;
-    height: 65%;
-    background: #ffffff; /* Fundo sólido branco */
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
-    transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
+    max-width: 550px;
+    height: 70%;
+    background: #ffffff;
+    box-shadow: 0 -15px 50px rgba(0,0,0,0.12);
+    transition: bottom 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 99999;
-    border-top-left-radius: 24px;
-    border-top-right-radius: 24px;
-    padding: 20px;
-    overflow-y: auto;
+    border-top-left-radius: 32px;
+    border-top-right-radius: 32px;
+    overflow: hidden;
+    padding-bottom: 90px;
 }
 
-/* Títulos e textos dentro da aba */
-.airport-bottom-sheet h2 {
-    color: #1a1a1a; /* Cinza quase preto para o nome do aeroporto */
-    font-weight: 700;
+.airport-bottom-sheet.visible {
+    bottom: 0 !important;
 }
 
-.airport-bottom-sheet h3 {
-    color: #4a5568; /* Cinza médio para "Hangares disponíveis" */
-    font-size: 1rem;
+/* Cabeçalho com suporte a METAR 100% */
+.drawer-header-sticky {
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid #f1f5f9;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.drawer-header-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: start;
+}
+
+.header-text-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.sheet-handle {
+    width: 40px;
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    margin: -12px auto 16px auto;
+}
+
+.close-sheet-btn {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #475569;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.close-sheet-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+/* Estilização do METAR 100% largura */
+.metar-container {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-left: 4px solid #10b981;
+    border-radius: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.metar-text {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+    color: #1e293b;
+    font-weight: 600;
+    line-height: 1.5;
+    margin: 0;
+    word-break: break-all;
+}
+
+.metar-label {
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
 }
 
 .icao-badge {
-    background: #edf2f7;
-    color: #2d3748;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-weight: bold;
-    font-size: 0.8rem;
-}
-
-/* Cards de Hangares */
-.hangar-card-pill {
-    padding: 16px;
-    border: 1px solid #e2e8f0; /* Borda leve */
-    border-radius: 16px;
-    background: #ffffff;
-    color: #2d3748; /* Cor do nome do hangar */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-}
-
-.hangar-card-pill strong {
-    color: #1a1a1a;
-    margin-bottom: 10px;
-    display: block;
-}
-
-/* Botões dentro do card */
-.pill-actions button {
-    flex: 1;
-    padding: 10px 5px;
-    border-radius: 10px;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
-    color: #4a5568;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 600;
-    transition: all 0.2s;
-}
-
-.pill-actions button.highlight {
-    background: #1a202c; /* Botão "Reservar" em preto/cinza escuro */
+    display: inline-block;
+    background: #1e293b;
     color: #ffffff;
-    border: none;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 800;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    margin-top: 8px;
 }
+
+/* Corpo e Cards */
+.drawer-body {
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.hangar-card-pill {
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    background: #f1f5f9; /* Background levemente mais escuro */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+    transition: transform 0.2s;
+}
+
+.hangar-card-pill:active { transform: scale(0.98); }
+
+.btn-action {
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s;
+}
+
+.btn-action.secondary { background: #ffffff; color: #475569; border: 1px solid #e2e8f0; }
+.btn-action.primary { background: #10b981; color: white; }

@@ -60,7 +60,7 @@ export async function router() {
 
         app.innerHTML = `
             ${layout}
-            <div id="page-content" style="padding:15px;"></div>
+            <div id="page-content"></div>
         `;
 
         if (layout) Navbar.after_render?.();

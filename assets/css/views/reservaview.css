@@ -1,0 +1,19 @@
+.reserva-container {
+    padding: 20px;
+}
+
+.reserva-form {
+    max-width: 600px;
+    margin: auto;
+}
+
+.reserva-form input,
+.reserva-form select {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: white;
+}

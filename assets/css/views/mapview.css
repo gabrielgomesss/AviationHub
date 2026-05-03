@@ -1,0 +1,85 @@
+/* FULL SCREEN MAP */
+.map-container {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* MAPA OCUPA TELA TODA */
+#map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* SEARCH BAR FLUTUANTE */
+.map-search {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 14px;
+    background: rgba(15, 20, 35, 0.2);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.08);
+    z-index: 2;
+}
+
+/* INPUT */
+.map-search input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255, 255, 255, 0.5);
+    color: #fff;
+    outline: none;
+}
+
+/* BUTTON */
+.map-search button {
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(77,163,255,0.4);
+    border: 1px solid rgba(77,163,255,0.5);
+    color: white;
+    cursor: pointer;
+}
+#main-nav button {
+    position: relative;
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 10px 12px;
+    font-size: 12px;
+}
+
+/* indicador azul (barrinha embaixo) */
+#main-nav button.active::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 4px;
+    transform: translateX(-80%);
+    width: 100%;
+    height: 3px;
+    border-radius: 10px;
+    background: #4da3ff;
+    box-shadow: 0 0 8px rgba(77,163,255,0.6);
+}
+
+/* opcional: ponto em vez de barra */
+#main-nav button.active.dot::after {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    bottom: 6px;
+}
+

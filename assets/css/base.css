@@ -1,0 +1,40 @@
+:root {
+    --bg: #0f172a;
+    --glass: rgba(255, 255, 255, 0.08);
+    --glass-strong: rgba(255, 255, 255, 0.12);
+    --border: rgba(255, 255, 255, 0.12);
+    --text: #e2e8f0;
+    --primary: #60a5fa;
+    --danger: #ef4444;
+    --success: #22c55e;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: radial-gradient(circle at top, #1e293b, #0f172a);
+    color: var(--text);
+}
+
+.glass {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--glass-strong);
+    color: white;
+    transition: .2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    background: rgba(255,255,255,0.15);
+}

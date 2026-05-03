@@ -1,17 +1,93 @@
-@import url(../src/views/styles/loginView.css);
+@import url("./css/base.css");
+@import url("./css/views/loginview.css");
+@import url("./css/views/mapview.css");
+@import url("./css/views/hangardashboardview.css");
+@import url("./css/views/createhangar.css");
+@import url("./css/views/edithangar.css");
+@import url("./css/views/hangarview.css");
+@import url("./css/views/hangarmanagement.css");
+@import url("./css/views/reservaview.css");
 
-.badge {
-    position: absolute;
-    top: 5px;
-    right: 10px;
-    background: red;
-    color: white;
-    border-radius: 50%;
-    padding: 2px 6px;
-    font-size: 12px;
-    font-weight: bold;
+#main-nav,
+.bottom-nav {
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 9999;
+    background: rgba(20, 25, 40, 0.5);
+    backdrop-filter: blur(12px);
 }
 
-.hidden {
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 72px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: rgba(15, 20, 35, 0.78);
+    backdrop-filter: blur(18px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    z-index: 99999;
+}
+
+.bottom-nav button {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    gap: 3px;
+    position: relative;
+}
+
+.nav-icon {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+}
+
+.bottom-nav button.active {
+    color: #4da3ff;
+}
+
+.bottom-nav button.active::after {
+    content: "";
+    position: absolute;
+    bottom: 8px;
+
+    width: 18px;
+    height: 3px;
+
+    background: #4da3ff;
+    border-radius: 10px;
+
+    box-shadow: 0 0 10px rgba(77,163,255,0.6);
+}
+
+#badge {
+    position: absolute;
+    top: 6px;
+    right: 18px;
+
+    background: #ff3b3b;
+    color: white;
+
+    font-size: 10px;
+
+    padding: 2px 6px;
+    border-radius: 10px;
+
     display: none;
 }

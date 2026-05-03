@@ -5,7 +5,7 @@ const routes = {
     '/': { view: () => import('./views/mapview.js'), private: true },
     '/login': { view: () => import('./views/loginview.js'), private: false },
     '/register': { view: () => import('./views/registerview.js'), private: false },
-    '/dashboard': { view: () => import('./views/dashboardview.js'), private: true },
+    '/hangar-dashboard': { view: () => import('./views/hangardashboardview.js'), private: true },
     '/create-hangar': { view: () => import('./views/createhangarview.js'), private: true },
     '/hangares': { view: () => import('./views/hangarmanagementview.js'), private: true },
     '/edit-hangar': { view: () => import('./views/edithangarview.js'), private: true },
@@ -41,18 +41,18 @@ export async function router() {
             return window.navigate('/login');
         }
 
-        if (path === '/login' && AuthService.isAuthenticated()) {
-            return window.navigate('/');
-        }
+        if (['/login', '/register'].includes(path) && AuthService.isAuthenticated()) {
+    return window.navigate('/');
+}
 
         const module = await route.view();
         const View = module.default;
 
-        const user = AuthService.getUser();
+        const user = AuthService.getUser() || AuthService.getCurrentUser?.();
 
-        if (path === '/dashboard' && !user?.permissions?.canEditReservations) {
-            return window.navigate('/');
-        }
+        if (path === '/hangar-dashboard' && !user?.permissions?.canEditReservations) {
+    return window.navigate('/');
+}
 
         const layout = (path !== '/login' && path !== '/register')
             ? Navbar.render()

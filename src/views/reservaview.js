@@ -15,172 +15,194 @@ export default {
 
     async after_render() {
 
-        const params = new URLSearchParams(window.location.search);
-        const hangarId = params.get("hangarId");
+        try {
 
-        const hangar = await HangarService.getHangarById(hangarId);
+            const params = new URLSearchParams(window.location.search);
+            const hangarId = params.get("hangarId");
 
-        if (!hangar) {
-            document.getElementById("reservaContainer").innerHTML = "Hangar não encontrado";
-            return;
-        }
+            if (!hangarId) {
+                document.getElementById("reservaContainer").innerHTML =
+                    "Hangar não informado na URL.";
+                return;
+            }
 
-        document.getElementById("reservaContainer").innerHTML = `
-            <h3>${hangar.nome}</h3>
+            const hangar = await HangarService.getHangarById(hangarId);
 
-            <div id="servicosContainer"></div>
+            if (!hangar) {
+                document.getElementById("reservaContainer").innerHTML =
+                    "Hangar não encontrado.";
+                return;
+            }
 
-            <button id="addServicoBtn">+ Adicionar serviço</button>
+            const container = document.getElementById("reservaContainer");
 
-            <br/><br/>
+            container.innerHTML = `
+                <h3>${hangar.nome}</h3>
 
-            <h3 id="precoTotal">Total: R$ 0.00</h3>
+                <div id="servicosContainer"></div>
 
-            <button id="reservarBtn">Confirmar Reserva</button>
-        `;
-
-        const container = document.getElementById("servicosContainer");
-
-        // =========================
-        // 🔥 CALCULAR TOTAL (POR SERVIÇO)
-        // =========================
-        const calcularTotal = () => {
-
-            const blocos = document.querySelectorAll("#servicosContainer > div");
-
-            let total = 0;
-
-            blocos.forEach(bloco => {
-
-                const select = bloco.querySelector(".servicoSelect");
-                const inicio = bloco.querySelector(".inicioServico").value;
-                const fim = bloco.querySelector(".fimServico").value;
-
-                if (!select) return;
-
-                const preco = parseFloat(select.selectedOptions[0]?.dataset?.preco || 0);
-                const tipo = select.selectedOptions[0]?.dataset?.tipo;
-
-                let multiplicador = 1;
-
-                if (inicio && fim && tipo === "diaria") {
-
-                    const ini = new Date(inicio);
-                    const end = new Date(fim);
-
-                    if (end > ini) {
-                        multiplicador = Math.ceil((end - ini) / (1000 * 60 * 60 * 24));
-                    }
-                }
-
-                total += preco * multiplicador;
-            });
-
-            document.getElementById("precoTotal").innerText =
-                `Total: R$ ${total.toFixed(2)}`;
-        };
-
-        // =========================
-        // 🔥 CRIAR SERVIÇO
-        // =========================
-        const criarServico = () => {
-
-            const div = document.createElement("div");
-
-            div.style.marginBottom = "20px";
-            div.style.padding = "10px";
-            div.style.border = "1px solid #ccc";
-
-            div.innerHTML = `
-                <select class="servicoSelect">
-                    ${
-                        hangar.servicos.map(s => `
-                            <option 
-                                value="${s.nome}" 
-                                data-preco="${s.preco_produto}" 
-                                data-tipo="${s.tipo || 'fixo'}"
-                            >
-                                ${s.nome} - R$ ${s.preco_produto}
-                            </option>
-                        `).join('')
-                    }
-                </select>
+                <button id="addServicoBtn">+ Adicionar serviço</button>
 
                 <br/><br/>
 
-                <label>Início:</label>
-                <input type="datetime-local" class="inicioServico"/>
+                <h3 id="precoTotal">Total: R$ 0.00</h3>
 
-                <br/><br/>
-
-                <label>Fim:</label>
-                <input type="datetime-local" class="fimServico"/>
-
-                <br/><br/>
-
-                <button class="removerServico">Remover</button>
-
-                <hr/>
+                <button id="reservarBtn">Confirmar Reserva</button>
             `;
 
-            container.appendChild(div);
+            const servicosContainer = document.getElementById("servicosContainer");
 
-            div.querySelector(".removerServico").addEventListener("click", () => {
-                div.remove();
-                calcularTotal();
-            });
-
-            div.querySelectorAll("select, input").forEach(el => {
-                el.addEventListener("change", calcularTotal);
-            });
-        };
-
-        // =========================
-        // INIT
-        // =========================
-        criarServico();
-
-        document.getElementById("addServicoBtn").addEventListener("click", criarServico);
-
-        // =========================
-        // RESERVA FINAL
-        // =========================
-        document.getElementById("reservarBtn").addEventListener("click", async () => {
-
-            try {
-
-                const user = AuthService.getCurrentUser();
+            const calcularTotal = () => {
 
                 const blocos = document.querySelectorAll("#servicosContainer > div");
 
-                const servicos = Array.from(blocos).map(bloco => {
+                let total = 0;
+
+                blocos.forEach(bloco => {
 
                     const select = bloco.querySelector(".servicoSelect");
 
-                    return {
-                        nome: select.value,
-                        preco: parseFloat(select.selectedOptions[0].dataset.preco),
-                        tipo: select.selectedOptions[0].dataset.tipo,
-                        inicio: bloco.querySelector(".inicioServico").value,
-                        fim: bloco.querySelector(".fimServico").value
-                    };
+                    const preco = parseFloat(select.selectedOptions[0]?.dataset?.preco || 0);
+                    const tipo = select.selectedOptions[0]?.dataset?.tipo;
+
+                    const inicio = bloco.querySelector(".inicioServico").value;
+                    const fim = bloco.querySelector(".fimServico").value;
+
+                    let multiplicador = 1;
+
+                    if (inicio && fim && tipo === "diaria") {
+                        const ini = new Date(inicio);
+                        const end = new Date(fim);
+
+                        if (end > ini) {
+                            multiplicador = Math.ceil((end - ini) / (1000 * 60 * 60 * 24));
+                        }
+                    }
+
+                    total += preco * multiplicador;
                 });
 
-                const reserva = {
-                    hangarId,
-                    userId: user.uid,
-                    servicos,
-                    status: "ativa"
+                document.getElementById("precoTotal").innerText =
+                    `Total: R$ ${total.toFixed(2)}`;
+            };
+
+            const criarServico = () => {
+
+                const div = document.createElement("div");
+
+                div.style.margin = "10px 0";
+                div.style.padding = "10px";
+                div.style.border = "1px solid #ccc";
+
+                div.innerHTML = `
+                    <select class="servicoSelect">
+                        ${hangar.servicos.map(s => `
+                            <option value="${s.nome}"
+                                data-preco="${s.preco_produto}"
+                                data-tipo="${s.tipo || 'fixo'}">
+                                ${s.nome} - R$ ${s.preco_produto}
+                            </option>
+                        `).join("")}
+                    </select>
+
+                    <br/><br/>
+
+                    <input type="datetime-local" class="inicioServico"/>
+                    <input type="datetime-local" class="fimServico"/>
+
+                    <br/><br/>
+
+                    <button class="remover">Remover</button>
+                `;
+
+                servicosContainer.appendChild(div);
+
+                div.querySelector(".remover").onclick = () => {
+                    div.remove();
+                    calcularTotal();
                 };
 
-                await ReservaService.criarReserva(reserva);
+                div.querySelectorAll("select, input").forEach(i =>
+                    i.addEventListener("change", calcularTotal)
+                );
+            };
 
-                alert("Reserva criada com sucesso!");
-                window.navigate("/");
+            criarServico();
 
-            } catch (err) {
-                alert(err.message);
-            }
-        });
+            document.getElementById("addServicoBtn").onclick = criarServico;
+
+            document.getElementById("reservarBtn").onclick = async () => {
+
+                try {
+
+                    const user = AuthService.getUser(); // ✔ CORRETO (não getCurrentUser)
+
+                    if (!user) throw new Error("Usuário não autenticado");
+
+                    const prefixo = prompt("Prefixo da aeronave:");
+
+                    const blocos = document.querySelectorAll("#servicosContainer > div");
+
+                    let valorTotal = 0;
+
+                    const servicos = Array.from(blocos).map(bloco => {
+
+                        const select = bloco.querySelector(".servicoSelect");
+
+                        const preco = parseFloat(select.selectedOptions[0].dataset.preco);
+                        const tipo = select.selectedOptions[0].dataset.tipo;
+
+                        const inicio = bloco.querySelector(".inicioServico").value;
+                        const fim = bloco.querySelector(".fimServico").value;
+
+                        let multiplicador = 1;
+
+                        if (inicio && fim && tipo === "diaria") {
+                            const ini = new Date(inicio);
+                            const end = new Date(fim);
+
+                            if (end > ini) {
+                                multiplicador = Math.ceil((end - ini) / (1000 * 60 * 60 * 24));
+                            }
+                        }
+
+                        const subtotal = preco * multiplicador;
+                        valorTotal += subtotal;
+
+                        return {
+                            nome: select.value,
+                            preco,
+                            tipo,
+                            inicio,
+                            fim,
+                            subtotal
+                        };
+                    });
+
+                    await ReservaService.criarReserva({
+                        hangarId,
+                        userId: user.uid,
+                        userEmail: user.email,
+                        userName: user.displayName || "",
+                        prefixoAviao: prefixo,
+                        servicos,
+                        valorTotal,
+                        status: "aguardando_pagamento"
+                    });
+
+                    alert("Reserva criada com sucesso!");
+                    window.navigate("/");
+
+                } catch (err) {
+                    console.error(err);
+                    alert(err.message);
+                }
+            };
+
+        } catch (err) {
+            console.error("Erro view reserva:", err);
+            document.getElementById("reservaContainer").innerHTML =
+                "Erro ao carregar reserva.";
+        }
     }
 };

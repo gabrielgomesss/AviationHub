@@ -12,8 +12,6 @@ const HangarView = {
     `,
 
     after_render: async () => {
-        document.getElementById('app-navbar').innerHTML = Navbar.render();
-        Navbar.after_render();
 
         const params = new URLSearchParams(window.location.search);
         const hangarId = params.get('id');

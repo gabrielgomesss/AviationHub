@@ -1,4 +1,4 @@
-import { AuthService } from './services/authservice.js';
+import { AuthService } from '../src/services/authservice.js';
 import Navbar from '../components/navbar.js';
 
 const routes = {
@@ -11,6 +11,7 @@ const routes = {
     '#/edit-hangar': { view: () => import('./views/edithangarview.js'), private: true },
     '#/reserva': { view: () => import('./views/reservaview.js'), private: true },
     '#/hangar': { view: () => import('./views/hangarview.js'), private: true },
+    '#/pilothub': { view: () => import('./views/pilothub.js'), private: true },
 };
 
 const app = document.getElementById("app-viewport");

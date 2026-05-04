@@ -4,19 +4,27 @@ import { ReservaService } from '../src/services/reservaservice.js';
 const Navbar = {
     render: () => {
         const user = AuthService.getUser();
+        // Define quem pode visualizar o PilotHub (Pilotos e Admins de Hangar)
+        const canAccessPilotHub = user?.role === 'piloto' || user?.role === 'adm_hangar';
 
         return `
             <div class="bottom-nav-container">
                 <nav class="pill-nav">
                     <button class="nav-pill" id="nav-map" data-path="#/">Mapa</button>
+                    
+                    ${canAccessPilotHub ? `
+                        <button class="nav-pill" id="nav-pilothub" data-path="#/pilothub">PilotHub</button>
+                    ` : ''}
+
                     ${user?.permissions?.canEditReservations ? `
                         <button class="nav-pill" id="nav-create" data-path="#/create-hangar">Criar</button>
                         <button class="nav-pill" id="nav-manage" data-path="#/hangares">Hangares</button>
                         <button class="nav-pill" id="nav-dashboard" data-path="#/hangar-dashboard" style="position: relative; overflow: visible;">
-                            Dash
+                            Dashboard
                             <span id="badge-reservas" class="nav-badge" style="display: none;">0</span>
                         </button>
                     ` : ''}
+                    
                     <button class="nav-pill btn-exit" id="nav-logout">Sair</button>
                 </nav>
             </div>

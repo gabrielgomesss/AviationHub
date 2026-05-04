@@ -1,0 +1,101 @@
+/* Container que mantém o padrão de fundo e espaçamento do app */
+.create-hangar-container {
+    width: 100%;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 80px; /* Espaço para a navbar inferior */
+}
+
+/* Card Branco com bordas arredondadas no topo */
+.create-hangar-card {
+    background: white;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 30px 30px 0 0;
+    padding: 30px 25px;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+}
+
+/* Títulos e Subtítulos padrão */
+.create-hangar-title {
+    color: #1e293b;
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+.create-hangar-subtitle {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-bottom: 30px;
+}
+
+/* Header do Perfil dentro do card */
+.pilot-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.pilot-avatar {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    border: 2px solid #4ecca3;
+    object-fit: cover;
+    background: #f8fafc;
+}
+
+/* Grupos de Input (Padrão Novo Hangar) */
+.input-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.main-input {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    color: #1e293b;
+    transition: border-color 0.2s;
+}
+
+.main-input:focus {
+    outline: none;
+    border-color: #4ecca3;
+}
+
+/* Botão padrão verde */
+.btn-create-hangar {
+    width: 100%;
+    background: #4ecca3;
+    color: #ffffff;
+    border: none;
+    padding: 16px;
+    border-radius: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-top: 10px;
+}

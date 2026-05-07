@@ -1,0 +1,531 @@
+/* =========================
+   MAP CONTAINER
+========================= */
+
+.map-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    background: #0f172a;
+}
+
+#map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background: #0f172a;
+}
+
+/* 🔥 IMPORTANTE PARA LEAFLET */
+.leaflet-container {
+    width: 100%;
+    height: 100%;
+    background: #0f172a;
+    z-index: 1;
+}
+
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-layer,
+.leaflet-marker-pane,
+.leaflet-shadow-pane,
+.leaflet-overlay-pane {
+    z-index: 2;
+}
+
+/* =========================
+   SEARCH BAR
+========================= */
+
+.map-search-container {
+    position: absolute;
+    top: env(safe-area-inset-top, 20px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    width: 90%;
+    max-width: 450px;
+    display: flex;
+    justify-content: center;
+}
+
+.map-search-glass {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    width: 100%;
+
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.4);
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,0.15),
+        0 1px 0 rgba(255,255,255,0.5) inset;
+}
+
+.map-search-glass input {
+    flex: 1;
+    border: none;
+    outline: none;
+
+    padding: 14px 18px;
+
+    border-radius: 14px;
+    background: #ffffff;
+
+    color: #1e293b;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.map-search-glass input::placeholder {
+    color: #94a3b8;
+}
+
+.map-search-glass button {
+    border: none;
+    cursor: pointer;
+
+    padding: 0 20px;
+    height: 46px;
+
+    border-radius: 14px;
+
+    background: #10b981;
+    color: #ffffff;
+
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+
+    transition: all 0.2s ease;
+}
+
+.map-search-glass button:hover {
+    transform: translateY(-1px);
+    background: #059669;
+}
+
+.map-search-glass button:active {
+    transform: scale(0.97);
+}
+
+/* =========================
+   BOTTOM SHEET
+========================= */
+
+.airport-bottom-sheet {
+    position: fixed;
+
+    left: 50%;
+    bottom: -100%;
+
+    transform: translateX(-50%);
+
+    width: 100%;
+    max-width: 550px;
+    height: 70%;
+
+    background: #ffffff;
+
+    border-top-left-radius: 32px;
+    border-top-right-radius: 32px;
+
+    box-shadow: 0 -15px 50px rgba(0,0,0,0.12);
+
+    overflow: hidden;
+
+    transition: bottom 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+
+    z-index: 99999;
+
+    padding-bottom: 90px;
+}
+
+.airport-bottom-sheet.visible {
+    bottom: 0;
+}
+
+/* =========================
+   DRAWER HEADER
+========================= */
+
+.drawer-header-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+
+    padding: 24px;
+
+    background: rgba(255,255,255,0.96);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.drawer-header-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.header-text-group {
+    flex: 1;
+    min-width: 180px;
+}
+
+.header-text-group h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.icao-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-top: 10px;
+
+    background: #0f172a;
+    color: #ffffff;
+
+    padding: 5px 12px;
+
+    border-radius: 999px;
+
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+/* =========================
+   CLOSE BUTTON
+========================= */
+
+.close-sheet-btn {
+    width: 42px;
+    height: 42px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 50%;
+
+    background: #f8fafc;
+    color: #475569;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    font-weight: 700;
+    font-size: 1rem;
+
+    transition: all 0.2s ease;
+
+    flex-shrink: 0;
+}
+
+.close-sheet-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+/* =========================
+   METAR
+========================= */
+
+.metar-container {
+    width: 100%;
+
+    margin-top: 18px;
+
+    padding: 14px 16px;
+
+    background: #f8fafc;
+
+    border-left: 4px solid #10b981;
+    border-radius: 14px;
+
+    box-sizing: border-box;
+}
+
+.metar-label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #64748b;
+
+    font-size: 0.65rem;
+    font-weight: 800;
+
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.metar-text {
+    margin: 0;
+
+    color: #0f172a;
+
+    font-family: 'Courier New', monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+
+    line-height: 1.5;
+
+    word-break: break-word;
+}
+
+/* =========================
+   DRAWER BODY
+========================= */
+
+.drawer-body {
+    padding: 24px;
+    overflow-y: auto;
+    height: calc(100% - 180px);
+}
+
+.section-title {
+    margin-bottom: 16px;
+
+    color: #64748b;
+
+    font-size: 0.72rem;
+    font-weight: 800;
+
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* =========================
+   HANGAR CARD
+========================= */
+
+.hangar-card-pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    padding: 20px;
+
+    margin-bottom: 16px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+
+    background: #f8fafc;
+
+    box-shadow: 0 4px 8px rgba(0,0,0,0.03);
+
+    transition: all 0.2s ease;
+}
+
+.hangar-card-pill:hover {
+    transform: translateY(-2px);
+}
+
+.hangar-card-pill strong {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #0f172a;
+
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.status-label {
+    color: #94a3b8;
+
+    font-size: 0.65rem;
+    font-weight: 800;
+
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.btn-action {
+    border: none;
+    cursor: pointer;
+
+    padding: 10px 16px;
+
+    border-radius: 12px;
+
+    font-size: 0.78rem;
+    font-weight: 800;
+
+    transition: all 0.2s ease;
+}
+
+.btn-action.secondary {
+    background: #ffffff;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-action.secondary:hover {
+    background: #f1f5f9;
+}
+
+/* =========================
+   EMPTY / ERROR
+========================= */
+
+.empty-state,
+.error-msg {
+    padding: 30px;
+    text-align: center;
+
+    color: #94a3b8;
+
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.error-msg {
+    color: #ef4444;
+}
+
+/* =========================
+   LOADING
+========================= */
+
+.drawer-loading {
+    padding: 24px;
+}
+
+.loading-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin-bottom: 20px;
+
+    color: #334155;
+    font-size: 0.92rem;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+
+    border-radius: 50%;
+
+    border: 3px solid #e2e8f0;
+    border-top: 3px solid #10b981;
+
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* =========================
+   SKELETON
+========================= */
+
+.skeleton {
+    position: relative;
+    overflow: hidden;
+
+    border-radius: 10px;
+
+    background: #e2e8f0;
+
+    margin-bottom: 12px;
+}
+
+.skeleton::after {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,0.65),
+        transparent
+    );
+
+    transform: translateX(-100%);
+    animation: shimmer 1.3s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.skeleton-title {
+    width: 60%;
+    height: 20px;
+}
+
+.skeleton-subtitle {
+    width: 40%;
+    height: 14px;
+}
+
+.skeleton-card {
+    width: 100%;
+    height: 70px;
+    border-radius: 16px;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+
+    .airport-bottom-sheet {
+        height: 75%;
+    }
+
+    .drawer-body {
+        padding-bottom: 120px;
+    }
+
+    .hangar-card-pill {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .pill-actions {
+        width: 100%;
+    }
+
+    .btn-action {
+        width: 100%;
+    }
+}

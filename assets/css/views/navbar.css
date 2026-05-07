@@ -1,0 +1,121 @@
+/* --- Unificação de Menu Único no Rodapé --- */
+.bottom-nav-container {
+    position: fixed;
+    bottom: 30px; 
+    width: 90%;
+    display: flex;
+    justify-self: center;
+    z-index: 10000;
+    pointer-events: none;
+}
+
+.pill-nav {
+    pointer-events: auto;
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 6px 10px;
+    border-radius: 50px;
+    display: flex;
+    gap: 4px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    max-width: 95vw;
+    
+    /* Ajustes para Scroll Lateral */
+    overflow-x: auto;
+    white-space: nowrap;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Esconde a barra de scroll para manter o design limpo */
+.pill-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.nav-pill {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    padding: 10px 16px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    flex-shrink: 0; /* Impede que os botões espremam */
+}
+
+.nav-pill.active {
+    background: rgba(255, 255, 255, 0.12);
+    color: #4ecca3;
+}
+
+/* Estilo da Bolinha de Notificação (Badge) */
+.nav-badge {
+    position: absolute;
+    top: -5px;
+    right: -4px;
+    background-color: #ff3b30;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    z-index: 10;
+    overflow: hidden;
+}
+
+/* --- Estilização Sutil da Busca --- */
+.map-search-container {
+    position: absolute;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 420px;
+    z-index: 1001;
+}
+
+.map-search-glass {
+    background: rgba(30, 41, 59, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 6px 12px;
+    border-radius: 14px;
+    display: flex;
+    transition: background 0.3s ease;
+}
+
+.map-search-glass input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 8px;
+}
+
+.map-search-glass:focus-within {
+    background: rgba(45, 55, 72, 0.3); 
+    border: 1px solid rgba(78, 204, 163, 0.4);
+}
+
+.map-search-glass button {
+    background: #4ecca3;
+    border: none;
+    color: #1a202c;
+    padding: 0 18px;
+    border-radius: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+}

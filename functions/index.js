@@ -171,10 +171,16 @@ exports.createReserva = onCall({ cors: true }, async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Acesso negado.");
     
     try {
+        // Busca os dados do usuário para pegar o nome
+        const userDoc = await db.collection("users").doc(request.auth.uid).get();
+        const userData = userDoc.data();
+        const nomeUsuario = userData ? userData.display_name : "Usuário Desconhecido";
+
         const rRef = db.collection("reservas").doc();
         await rRef.set({
             ...request.data,
             clienteId: request.auth.uid,
+            nomeUsuario: nomeUsuario, // Salvando o nome de quem reservou
             status: "pendente",
             createdAt: FieldValue.serverTimestamp()
         });

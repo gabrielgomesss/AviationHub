@@ -191,7 +191,7 @@ export default {
                         horaSaida: document.getElementById("horaSaida").value,
                         possuiSeguro: document.getElementById("possuiSeguro").checked,
                         observacoes: document.getElementById("observacoes").value,
-                        observacoes: document.getElementById("Modelo").value,
+                        modelo: document.getElementById("Modelo").value,
                         // CAMPO ADICIONADO PARA O BANCO DE DADOS
                         valorTotal: valorTotalSalvar 
                     };

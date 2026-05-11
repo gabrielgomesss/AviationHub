@@ -1,17 +1,37 @@
-import { db, doc, getDoc, setDoc } from "./firebase-config.js";
+import { functions } from "../../firebase-config.js";
+import { httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 
 export const PilotService = {
     async getPilotProfile(userId) {
-        if (!userId) return null;
-        const snap = await getDoc(doc(db, "pilotos", userId));
-        return snap.exists() ? snap.data() : null;
+        try {
+            const getProfile = httpsCallable(functions, 'getPilotProfile');
+            const result = await getProfile({ userId });
+            return result.data;
+        } catch (error) {
+            console.error("Erro ao buscar perfil:", error);
+            throw error;
+        }
     },
 
     async savePilotProfile(userId, profileData) {
-        await setDoc(doc(db, "pilotos", userId), {
-            ...profileData,
-            lastUpdate: new Date().toISOString(),
-            uid: userId 
-        }, { merge: true });
+        try {
+            const saveProfile = httpsCallable(functions, 'savePilotProfile');
+            const result = await saveProfile({ userId, profileData });
+            return result.data;
+        } catch (error) {
+            console.error("Erro ao salvar perfil:", error);
+            throw error;
+        }
+    },
+
+    async getAllPilots() {
+        try {
+            const listPilots = httpsCallable(functions, 'getAllPilots');
+            const result = await listPilots();
+            return result.data;
+        } catch (error) {
+            console.error("Erro ao listar pilotos:", error);
+            throw error;
+        }
     }
 };

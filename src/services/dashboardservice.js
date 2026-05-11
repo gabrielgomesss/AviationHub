@@ -1,18 +1,16 @@
-import { db } from '../../firebase-config.js'; 
-import { 
-    collection, 
-    query, 
-    where, 
-    onSnapshot 
-} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { db, functions } from '../../firebase-config.js'; 
+import { collection, query, where, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 
 export const DashboardService = {
-    listenDashboardData(hangarId, period, callback) {
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        if (period === "week") now.setDate(now.getDate() - 7);
-        else now.setDate(1);
+    async updateReservaStatus(id, status, msgAdmin = "") {
+        try {
+            const fn = httpsCallable(functions, "updateReservaStatus");
+            return (await fn({ id, status, msgAdmin })).data;
+        } catch (error) { throw error; }
+    },
 
+    listenDashboardData(hangarId, period, callback) {
         const q = query(collection(db, "reservas"), where("hangarId", "==", hangarId));
 
         return onSnapshot(q, (snapshot) => {
@@ -21,24 +19,25 @@ export const DashboardService = {
 
             snapshot.forEach(d => {
                 const r = d.data();
-                
-                // Conversão flexível de valor
                 let valorNumerico = 0;
-                const campoValor = r.valorTotal || r.valor || 0;
-                if (typeof campoValor === 'string') {
+                const campoValor = r.valorTotal || "0";
+
+                // Se o valor for o texto "À combinar", tratamos como 0 para o cálculo financeiro
+                if (typeof campoValor === 'string' && campoValor.includes("combinar")) {
+                    valorNumerico = 0;
+                } else if (typeof campoValor === 'string') {
                     valorNumerico = parseFloat(campoValor.replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
                 } else {
                     valorNumerico = Number(campoValor) || 0;
                 }
 
-                // Guardamos TUDO que vem do banco no objeto
                 reservas.push({ 
                     ...r, 
                     id: d.id, 
-                    valorFinal: valorNumerico 
+                    valorExibicao: r.valorTotal // Mantém o texto original para o ADM ver
                 });
 
-                if (r.status === "aguardando_pagamento" || r.status === "pendente") {
+                if (r.status === "pendente" || r.status === "aguardando_pagamento") {
                     metrics.valorPendente += valorNumerico;
                 } else if (r.status === "aprovado") {
                     metrics.totalValor += valorNumerico;

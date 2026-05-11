@@ -1,0 +1,100 @@
+/* --- ESTILO DA LISTAGEM (IGUAL AO ADMIN) --- */
+.reserva-card-item {
+    background: white;
+    margin-bottom: 15px;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #f1f5f9;
+}
+
+.reserva-card-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.reserva-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.reserva-card-prefixo {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.reserva-card-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.reserva-card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+/* --- ESTILO DO MODAL (DETALHES) --- */
+.modal-overlay-reserva {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+}
+
+.modal-reserva-content {
+    background: white;
+    padding: 30px;
+    border-radius: 28px;
+    width: 95%;
+    max-width: 440px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.reserva-info-grid-modal {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    background: #f8fafc;
+    padding: 24px;
+    border-radius: 24px;
+    margin-bottom: 20px;
+    border: 1px solid #f1f5f9;
+}
+
+.reserva-feedback-blue {
+    background: #eff6ff;
+    padding: 20px;
+    border-radius: 20px;
+    border: 1px dashed #bfdbfe;
+    margin-top: 10px;
+}
+
+.btn-reserva-voltar {
+    width: 100%;
+    background: #f1f5f9;
+    border: none;
+    color: #475569;
+    padding: 18px;
+    border-radius: 16px;
+    font-weight: 900;
+    cursor: pointer;
+    margin-top: 20px;
+}

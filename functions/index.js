@@ -11,7 +11,6 @@ const db = admin.firestore();
 
 /**
  * Helper para realizar chamadas de API externas usando o módulo nativo HTTPS.
- * Resolve problemas de compatibilidade do 'fetch' em diferentes versões do Node.
  */
 function fetchFromCheckWX(url, apiKey) {
     return new Promise((resolve, reject) => {
@@ -43,12 +42,10 @@ exports.getWeather = onCall({ cors: true }, async (request) => {
     const { icao } = request.data || {};
     if (!icao) throw new HttpsError("invalid-argument", "O código ICAO é obrigatório.");
 
-    // Substitua pela sua chave real da CheckWX
     const API_KEY = "dbc89fb291f74509bc11b23786fa2f86";
     const cleanIcao = icao.toUpperCase().trim();
 
     try {
-        // Passo A: Buscar informações da estação (Aeródromo)
         const stationUrl = `https://api.checkwx.com/station/${cleanIcao}`;
         const stationResult = await fetchFromCheckWX(stationUrl, API_KEY);
 
@@ -60,25 +57,18 @@ exports.getWeather = onCall({ cors: true }, async (request) => {
         let lat = null;
         let lon = null;
 
-        // EXTRAÇÃO GEOJSON: A CheckWX coloca as coordenadas em geometry.coordinates
-        // Padrão GeoJSON: [0] = Longitude, [1] = Latitude
         if (station.geometry && station.geometry.coordinates) {
             lon = parseFloat(station.geometry.coordinates[0]);
             lat = parseFloat(station.geometry.coordinates[1]);
-        } 
-        // Fallback: Tenta buscar na raiz se existir
-        else if (station.latitude && station.longitude) {
+        } else if (station.latitude && station.longitude) {
             lat = parseFloat(station.latitude);
             lon = parseFloat(station.longitude);
         }
 
-        // Validação final das coordenadas
         if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) {
-            console.error(`Falha de coordenadas para ${cleanIcao}:`, station);
             throw new HttpsError("data-loss", "Aeródromo localizado, mas sem coordenadas geográficas válidas.");
         }
 
-        // Passo B: Buscar METAR decodificado (Clima)
         let metar = "METAR não disponível no momento.";
         try {
             const metarUrl = `https://api.checkwx.com/metar/${cleanIcao}/decoded`;
@@ -87,7 +77,7 @@ exports.getWeather = onCall({ cors: true }, async (request) => {
                 metar = metarResult.data[0].raw_text;
             }
         } catch (e) {
-            console.warn(`Erro ao buscar METAR para ${cleanIcao} (não crítico).`);
+            console.warn(`Erro ao buscar METAR para ${cleanIcao}.`);
         }
 
         return {
@@ -100,14 +90,13 @@ exports.getWeather = onCall({ cors: true }, async (request) => {
         };
 
     } catch (error) {
-        console.error("Erro na Function getWeather:", error);
         if (error instanceof HttpsError) throw error;
-        throw new HttpsError("internal", error.message || "Erro interno ao buscar dados do aeroporto.");
+        throw new HttpsError("internal", error.message || "Erro interno.");
     }
 });
 
 // ======================================================
-// 2. ATUALIZAR HANGAR (Com correção de Preço)
+// 2. ATUALIZAR HANGAR
 // ======================================================
 exports.updateHangar = onCall({ cors: true }, async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Acesso negado.");
@@ -116,7 +105,6 @@ exports.updateHangar = onCall({ cors: true }, async (request) => {
     if (!id) throw new HttpsError("invalid-argument", "ID do hangar é obrigatório.");
 
     try {
-        // Garante que o preço seja gravado como Number
         if (dados.preco !== undefined) {
             dados.preco = parseFloat(String(dados.preco).replace(',', '.'));
         }
@@ -165,13 +153,16 @@ exports.createHangarWithLink = onCall({ cors: true }, async (request) => {
 });
 
 // ======================================================
-// 4. CRIAR RESERVA
+// 4. CRIAR RESERVA (Atualizada com nomeUsuario)
 // ======================================================
 exports.createReserva = onCall({ cors: true }, async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Acesso negado.");
     
     try {
+<<<<<<< HEAD
         // Busca os dados do usuário para pegar o nome
+=======
+>>>>>>> adição de módulos, ajustes de layout e inclusão de RDN em reservas - Stable
         const userDoc = await db.collection("users").doc(request.auth.uid).get();
         const userData = userDoc.data();
         const nomeUsuario = userData ? userData.display_name : "Usuário Desconhecido";
@@ -180,7 +171,11 @@ exports.createReserva = onCall({ cors: true }, async (request) => {
         await rRef.set({
             ...request.data,
             clienteId: request.auth.uid,
+<<<<<<< HEAD
             nomeUsuario: nomeUsuario, // Salvando o nome de quem reservou
+=======
+            nomeUsuario: nomeUsuario,
+>>>>>>> adição de módulos, ajustes de layout e inclusão de RDN em reservas - Stable
             status: "pendente",
             createdAt: FieldValue.serverTimestamp()
         });
@@ -191,7 +186,50 @@ exports.createReserva = onCall({ cors: true }, async (request) => {
 });
 
 // ======================================================
-// 5. LISTAR HANGARES POR ICAO
+// 5. LISTAR MINHAS RESERVAS (Nova: Busca Segura por Cliente)
+// ======================================================
+exports.getMinhasReservas = onCall({ cors: true }, async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Acesso negado.");
+
+    try {
+        const snapshot = await db.collection("reservas")
+            .where("clienteId", "==", request.auth.uid)
+            .orderBy("createdAt", "desc")
+            .get();
+            
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: doc.data().createdAt?.toDate().toISOString()
+        }));
+    } catch (e) {
+        throw new HttpsError("internal", e.message);
+    }
+});
+
+// ======================================================
+// 6. ATUALIZAR STATUS DA RESERVA (Nova: Com mensagem do Admin)
+// ======================================================
+exports.updateReservaStatus = onCall({ cors: true }, async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Acesso negado.");
+    
+    const { id, status, msgAdmin } = request.data || {};
+    if (!id || !status) throw new HttpsError("invalid-argument", "ID e Status são obrigatórios.");
+
+    try {
+        await db.collection("reservas").doc(id).update({
+            status: status,
+            msgAdmin: msgAdmin || "",
+            updatedAt: FieldValue.serverTimestamp()
+        });
+        return { success: true };
+    } catch (e) {
+        throw new HttpsError("internal", e.message);
+    }
+});
+
+// ======================================================
+// 7. LISTAR HANGARES POR ICAO
 // ======================================================
 exports.getHangaresByIcao = onCall({ cors: true }, async (request) => {
     const { icao } = request.data || {};
@@ -206,6 +244,118 @@ exports.getHangaresByIcao = onCall({ cors: true }, async (request) => {
             id: doc.id,
             ...doc.data()
         }));
+    } catch (e) {
+        throw new HttpsError("internal", e.message);
+    }
+});
+
+// ======================================================
+// 8. PILOTHUB: BUSCAR PERFIL DO PILOTO
+// ======================================================
+exports.getPilotProfile = onCall({ cors: true }, async (request) => {
+    const { userId } = request.data || {};
+    if (!userId) throw new HttpsError("invalid-argument", "ID do usuário é obrigatório.");
+
+    try {
+        const doc = await db.collection("pilotos").doc(userId).get();
+        return doc.exists ? doc.data() : null;
+    } catch (e) {
+        throw new HttpsError("internal", e.message);
+    }
+});
+
+// ======================================================
+// 9. PILOTHUB: SALVAR/ATUALIZAR PERFIL
+// ======================================================
+exports.savePilotProfile = onCall({ cors: true , memory: "1GiB" }, async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Acesso negado.");
+    
+    const { userId, profileData } = request.data || {};
+    if (!userId) throw new HttpsError("invalid-argument", "ID do usuário é obrigatório.");
+
+    try {
+        await db.collection("pilotos").doc(userId).set({
+            ...profileData,
+            lastUpdate: FieldValue.serverTimestamp(),
+            uid: userId 
+        }, { merge: true });
+        return { success: true };
+    } catch (e) {
+        throw new HttpsError("internal", e.message);
+    }
+});
+
+// ======================================================
+// 10. PILOTHUB: LISTAR TODOS OS PILOTOS
+// ======================================================
+exports.getAllPilots = onCall({ cors: true,  }, async (request) => {
+    try {
+        const snapshot = await db.collection("pilotos")
+            .orderBy("lastUpdate", "desc")
+            .limit(50)
+            .get();
+            
+        return snapshot.docs.map(doc => doc.data());
+    } catch (e) {
+        throw new HttpsError("internal", e.message);
+    }
+});
+
+// ======================================================
+// 11. PARTNERHUB: BUSCAR PERFIL DO PARCEIRO
+// ======================================================
+exports.getPartnerProfile = onCall({ cors: true }, async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Acesso negado.");
+    
+    const { userId } = request.data || {};
+    if (!userId) throw new HttpsError("invalid-argument", "ID do usuário é obrigatório.");
+
+    try {
+        const doc = await db.collection("parceiros").doc(userId).get();
+        return doc.exists ? doc.data() : null;
+    } catch (e) {
+        throw new HttpsError("internal", e.message);
+    }
+});
+
+// ======================================================
+// 12. PARTNERHUB: SALVAR/ATUALIZAR PERFIL DO PARCEIRO
+// ======================================================
+exports.savePartnerProfile = onCall({ cors: true, memory: "1GiB" }, async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Acesso negado.");
+    
+    const { userId, profileData } = request.data || {};
+    if (!userId) throw new HttpsError("invalid-argument", "ID do usuário é obrigatório.");
+
+    try {
+        // Salva na coleção "parceiros" e garante que o campo 'active' exista
+        await db.collection("parceiros").doc(userId).set({
+            ...profileData,
+            lastUpdate: FieldValue.serverTimestamp(),
+            uid: userId 
+        }, { merge: true });
+
+        // Opcional: Se quiser garantir que a role no Auth/Users também seja atualizada, 
+        // você pode adicionar essa lógica aqui ou via Admin SDK.
+        
+        return { success: true };
+    } catch (e) {
+        throw new HttpsError("internal", e.message);
+    }
+});
+
+// ======================================================
+// 13. PARTNERHUB: LISTAR TODOS OS PARCEIROS
+// ======================================================
+exports.getAllPartners = onCall({ cors: true }, async (request) => {
+    try {
+        // Retorna parceiros ordenados pela última atualização
+        const snapshot = await db.collection("parceiros")
+            .orderBy("lastUpdate", "desc")
+            .limit(100)
+            .get();
+            
+        return snapshot.docs.map(doc => doc.data());
     } catch (e) {
         throw new HttpsError("internal", e.message);
     }

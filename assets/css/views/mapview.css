@@ -87,7 +87,7 @@
 }
 
 .map-search-glass input::placeholder {
-    color: #94a3b8;
+    color: #788291;
 }
 
 .map-search-glass button {
@@ -528,4 +528,38 @@
     .btn-action {
         width: 100%;
     }
+}
+
+/* =========================
+   TOAST NOTIFICATION
+========================= */
+#toast-container {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    pointer-events: none;
+}
+
+.toast-message {
+    background: #1e293b; /* Slate-800 */
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #ef4444; /* Vermelho para erro */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(-20px);
+}
+
+.toast-message.show {
+    opacity: 1;
+    transform: translateY(0);
 }

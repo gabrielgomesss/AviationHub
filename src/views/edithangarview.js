@@ -3,145 +3,153 @@ import { HangarService } from "../services/hangarservice.js";
 export default {
     async render() {
         return `
-            <div class="hangar-page-layout">
-                <!-- Overlay para fechar ao clicar fora ou focar na edição -->
-                <div class="page-overlay" onclick="window.history.back()"></div>
-                
-                <div class="hangar-container-fluid">
+            <div id="app-navbar"></div>
+            <div class="hangar-detail-page-light">
+                <div class="hangar-view-container-light">
                     
-                    <div class="page-header-block">
-                        <div class="page-header-info">
-                            <h2>Editar Hangar</h2>
-                            <p class="subtitle-light">Aprimore os detalhes da sua unidade</p>
+                    <div style="padding: 15px 20px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; min-height: 70px; background: white; border-radius: 20px 20px 0 0;">
+                        <button onclick="window.history.back()" style="background: #f1f5f9; border: none; width: 45px; height: 45px; border-radius: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #1e293b; margin-right: 15px;">
+                            <span class="material-symbols-outlined" style="font-weight: 800;"><svg width="16" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></span>
+                        </button>
+                        <div>
+                            <h2 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: #1e293b;">Editar Hangar</h2>
+                            <p style="margin: 0; color: #64748b; font-size: 0.8rem; font-weight: 500;">Configure os detalhes e serviços</p>
                         </div>
                     </div>
-                    
-                    <div id="editContainer" class="content-section-light" style="margin-top: 20px;">
-                        <div class="loading-state">Sincronizando dados...</div>
+
+                    <div id="editContainer" class="profile-editor-container" style="padding: 20px; background: white; border-radius: 0 0 20px 20px;">
+                        <div class="loading-state" style="text-align: center; padding: 40px; color: #94a3b8;">
+                            <p style="font-weight: 800; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Sincronizando dados...</p>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
     },
 
+
     async after_render() {
-        // AJUSTE: Em SPAs com Hash, os parâmetros ficam após o '?' dentro do hash
         const hashParts = window.location.hash.split('?');
         const params = new URLSearchParams(hashParts[1] || "");
         const id = params.get("id");
         const editContainer = document.getElementById("editContainer");
 
         if (!id) {
-            console.error("ID não fornecido na URL");
             window.location.hash = '#/hangares';
             return;
         }
 
         try {
             const hangar = await HangarService.getHangarById(id);
-
-            if (!hangar) {
-                editContainer.innerHTML = `
-                    <div style="text-align:center; padding:40px;">
-                        <p style="color:#ef4444; font-weight:800;">Hangar não encontrado.</p>
-                        <button onclick="window.location.hash = '#/hangares'" class="btn-primary-emerald-bold" style="margin-top:20px;">VOLTAR</button>
-                    </div>`;
-                return;
-            }
+            if (!hangar) throw new Error("Hangar não encontrado");
 
             editContainer.innerHTML = `
                 <div class="form-section">
-                    <label class="field-label">NOME DO HANGAR</label>
-                    <input type="text" id="nome" class="input-field-light" value="${hangar.nome}" placeholder="Ex: Hangar Alpha"/>
-                </div>
+                    <div class="input-block">
+                        <label class="field-label">NOME DO HANGAR</label>
+                        <input type="text" id="nome" class="input-field-light" value="${hangar.nome}">
+                        </button>
+                    </div>
 
-                <div class="form-section" style="margin-top: 30px;">
-                    <h3 class="field-label">TABELA DE PREÇOS ATIVA</h3>
-                    <div id="servicosContainer" class="standard-grid" style="margin-top:10px;"></div>
-                    
-                    <button id="addServico" class="btn-add-service-dashed" style="width:100%; background:none; border:2px dashed #cbd5e1; padding:15px; border-radius:14px; color:#64748b; font-weight:800; cursor:pointer; margin-top:15px;">
-                        + Adicionar Novo Serviço
-                    </button>
-                </div>
+                    <div style="margin-top: 30px;">
+                        <h3 class="field-label">SERVIÇOS DISPONÍVEIS</h3>
+                        <div id="servicosContainer" class="services-list-wrapper"></div>
+                        <button id="addServicoBtn" class="btn-add-service-dashed" style="width:100%; margin-top:15px;">
+                            + Adicionar novo serviço
+                        </button>
+                    </div>
 
-                <div style="margin-top: 40px; display: grid; gap: 15px;">
-                    <button id="salvar" class="btn-primary-emerald-bold">
-                        SALVAR ALTERAÇÕES
-                    </button>
-                    <button id="deletarHangar" style="background:none; border:none; color:#ef4444; font-weight:700; padding:10px; cursor:pointer; font-size:0.9rem;">
-                        EXCLUIR ESTA UNIDADE
-                    </button>
+                    <div style="margin-top: 40px; margin-bottom: 20px;">
+                        <button id="salvarHangarBtn" class="btn-primary-emerald-bold" style="width: 100%;">
+                            SALVAR ALTERAÇÕES
+                        </button>
+                    </div>
                 </div>
             `;
 
             const container = document.getElementById("servicosContainer");
 
-            const criarServico = (s = {}) => {
+            const addServicoCard = (s = { nome: "", preco_produto: 0, tipo: "", sob_consulta: false }) => {
                 const div = document.createElement("div");
                 div.className = "service-selection-card";
-                div.style = "background:#f8fafc; border:1px solid #e2e8f0; padding:15px; border-radius:18px; margin-bottom:10px;";
-
                 div.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <input class="nome input-field-light" value="${s.nome || ''}" placeholder="Serviço" style="margin-top:0; flex:1;"/>
-                        <button class="remover" style="background:#fee2e2; color:#ef4444; border:none; width:36px; height:36px; border-radius:10px; margin-left:10px; cursor:pointer; font-weight:bold;">✕</button>
+                    <button class="remover">✕</button>
+                    <div class="service-name-row">
+                        <label class="input-sublabel">Descrição do Serviço</label>
+                        <input type="text" class="nome input-field-light" value="${s.nome}" placeholder="Ex: Pernoite" style="margin-top: 0;">
                     </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div>
-                            <label class="field-label" style="font-size:0.65rem;">PREÇO (R$)</label>
-                            <input class="preco input-field-light" type="number" value="${s.preco_produto || 0}" style="margin-top:5px;"/>
+                    <div class="service-details-grid">
+                        <div class="input-block">
+                            <label class="input-sublabel">Preço (R$)</label>
+                            <input type="number" class="preco input-field-light ${s.sob_consulta ? 'input-disabled' : ''}" 
+                                value="${s.preco_produto}" ${s.sob_consulta ? 'disabled' : ''} style="margin-top: 0;">
                         </div>
-                        <div>
-                            <label class="field-label" style="font-size:0.65rem;">COBRANÇA</label>
-                            <select class="tipo input-field-light" style="margin-top:5px;">
-                                <option value="fixo" ${s.tipo === "fixo" ? "selected" : ""}>Fixo</option>
-                                <option value="diaria" ${s.tipo === "diaria" ? "selected" : ""}>Diária</option>
-                            </select>
+                        <div class="input-block">
+                            <label class="input-sublabel">Cobrança</label>
+                            <input type="text" class="tipo input-field-light ${s.sob_consulta ? 'input-disabled' : ''}" 
+                                value="${s.tipo}" ${s.sob_consulta ? 'disabled' : ''} placeholder="Ex: Diária" style="margin-top: 0;">
+                        </div>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="sobConsulta" ${s.sob_consulta ? "checked" : ""}>
+                                <span>À COMBINAR</span>
+                            </label>
                         </div>
                     </div>
                 `;
 
-                container.appendChild(div);
+                const check = div.querySelector(".sobConsulta");
+                const pInput = div.querySelector(".preco");
+                const tInput = div.querySelector(".tipo");
+
+                check.onchange = () => {
+                    pInput.disabled = check.checked;
+                    tInput.disabled = check.checked;
+                    if (check.checked) {
+                        pInput.value = 0;
+                        tInput.value = "valor a combinar";
+                        pInput.classList.add("input-disabled");
+                        tInput.classList.add("input-disabled");
+                    } else {
+                        pInput.classList.remove("input-disabled");
+                        tInput.classList.remove("input-disabled");
+                    }
+                };
+
                 div.querySelector(".remover").onclick = () => div.remove();
+                container.appendChild(div);
             };
 
-            // Carrega serviços existentes
-            (hangar.servicos || []).forEach(s => {
-                criarServico({...s, tipo: s.tipo || "fixo"});
-            });
+            (hangar.servicos || []).forEach(addServicoCard);
+            document.getElementById("addServicoBtn").onclick = () => addServicoCard();
 
-            document.getElementById("addServico").onclick = () => criarServico();
-
-            // Lógica de Salvar
-            document.getElementById("salvar").onclick = async () => {
-                const nome = document.getElementById("nome").value;
-                const cards = container.querySelectorAll(".service-selection-card");
-                
-                const servicos = Array.from(cards).map(card => ({
+            document.getElementById("salvarHangarBtn").onclick = async () => {
+                const btn = document.getElementById("salvarHangarBtn");
+                const servicos = Array.from(container.querySelectorAll(".service-selection-card")).map(card => ({
                     nome: card.querySelector(".nome").value,
                     preco_produto: parseFloat(card.querySelector(".preco").value || 0),
-                    tipo: card.querySelector(".tipo").value
+                    tipo: card.querySelector(".tipo").value,
+                    sob_consulta: card.querySelector(".sobConsulta").checked
                 }));
 
                 try {
-                    await HangarService.updateHangar(id, { nome, servicos });
-                    alert("Configurações atualizadas com sucesso!");
+                    btn.disabled = true;
+                    btn.innerText = "SALVANDO...";
+                    await HangarService.updateHangar(id, { 
+                        nome: document.getElementById("nome").value, 
+                        servicos 
+                    });
+                    alert("Atualizado com sucesso!");
                     window.location.hash = '#/hangares';
                 } catch (err) {
-                    alert("Erro ao salvar: " + err.message);
-                }
-            };
-
-            document.getElementById("deletarHangar").onclick = async () => {
-                if(confirm("Tem certeza que deseja remover este hangar permanentemente?")) {
-                    alert("Função de exclusão em desenvolvimento.");
+                    alert("Erro: " + err.message);
+                    btn.disabled = false;
+                    btn.innerText = "SALVAR ALTERAÇÕES";
                 }
             };
 
         } catch (err) {
-            console.error(err);
-            editContainer.innerHTML = "<div class='error-state-light'>Erro ao sincronizar dados.</div>";
+            editContainer.innerHTML = `<div class="error-message">${err.message}</div>`;
         }
     }
 };

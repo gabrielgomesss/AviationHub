@@ -9,6 +9,7 @@
 @import url("./css/views/reservaview.css");
 @import url("./css/views/navbar.css");
 @import url("./css/views/pilothub.css");
+@import url("./css/views/myreservaview.css");
 /* 
 #main-nav,
 .bottom-nav {
@@ -131,3 +132,27 @@
     box-shadow: 0 10px 25px rgba(0,0,0,0.05);
     box-sizing: border-box;
 }
+
+/* 1. Garante que o container principal tenha espaço extra no final */
+.hangar-container-fluid, 
+.hangar-detail-page-light,
+.modal-content {
+    /* O valor deve ser a altura da sua navbar + um respiro (ex: 70px + 30px) */
+    padding-bottom: 30% !important; 
+    box-sizing: border-box;
+}
+
+/* 2. Solução específica para Modais com botões fixos no rodapé */
+#modalDetalhes .modal-content {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Criamos um espaçador invisível no final do modal para empurrar o conteúdo para cima */
+#modalDetalhes .modal-content::after {
+    content: "";
+    display: block;
+    min-height: 30%; /* Altura da zona de conflito */
+    width: 100%;
+}
+

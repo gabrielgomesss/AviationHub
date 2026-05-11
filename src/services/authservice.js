@@ -31,41 +31,41 @@ export const AuthService = {
         });
     },
 
-    async register(email, password, userData) {
-        try {
-            // HIGIENIZAÇÃO PROFUNDA: Remove espaços, quebras de linha e caracteres invisíveis
-            const cleanEmail = email.trim().toLowerCase().replace(/[\u200B-\u200D\uFEFF]/g, '');
+    // authservice.js - Método register
+async register(email, password, userData) {
+    try {
+        const cleanEmail = email.trim().toLowerCase().replace(/[\u200B-\u200D\uFEFF]/g, '');
 
-            // 1. Criação no Firebase Auth
-            const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-            const user = userCredential.user;
+        const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+        const user = userCredential.user;
 
-            // 2. Definição da Role (admin_hangar ou piloto)
-            const selectedRole = userData.role === 'admin_hangar' ? 'admin_hangar' : 'piloto';
-
-            // 3. Estrutura de dados fiel à imagem image_b17d96.png
-            const newUserProfile = {
-                createdAt: new Date().toLocaleString('pt-BR', { 
-                    timeZone: 'America/Sao_Paulo' 
-                }) + " UTC-3",
-                display_name: userData.nome || "Novo Usuário",
-                email: cleanEmail,
-                managed_hangars: selectedRole === 'admin_hangar' ? [] : [], // Mantém array vazio para ambos conforme imagem
-                role: selectedRole
-            };
-
-            // 4. Gravação obrigatória no Firestore utilizando o UID
-            await setDoc(doc(db, "users", user.uid), newUserProfile);
-
-            this._currentUser = { uid: user.uid, ...newUserProfile };
-            return this._currentUser;
-
-        } catch (error) {
-            // Log para identificar se o problema é o e-mail ou outra restrição
-            console.error("Erro detalhado no registro:", error.code, "| Email tentado:", `"${email}"`);
-            throw error;
+        // --- AJUSTE AQUI ---
+        // Adicionamos 'parceiro' à lista de permissões
+        let selectedRole = 'piloto'; 
+        if (userData.role === 'admin_hangar') {
+            selectedRole = 'admin_hangar';
+        } else if (userData.role === 'parceiro') {
+            selectedRole = 'parceiro';
         }
-    },
+
+        const newUserProfile = {
+            email: cleanEmail,
+            displayName: userData.nome || "Usuário", // Usei 'nome' para bater com o RegisterView
+            role: selectedRole,
+            createdAt: new Date().toISOString()
+        };
+
+        // Gravação no Firestore
+        await setDoc(doc(db, "users", user.uid), newUserProfile);
+
+        this._currentUser = { uid: user.uid, ...newUserProfile };
+        return this._currentUser;
+
+    } catch (error) {
+        console.error("Erro detalhado no registro:", error.code);
+        throw error;
+    }
+},
 
     async login(email, password) {
         try {

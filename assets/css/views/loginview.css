@@ -55,6 +55,19 @@
     margin-bottom: 24px;
 }
 
+#login-email, #login-password{
+    background-color: #1e293b;
+    color: white;
+}
+#login-email, #login-password{
+}::placeholder{
+    color: white;
+    font-weight: 300;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+
 .field-group label {
     display: block;
     color: #94a3b8;

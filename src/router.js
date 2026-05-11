@@ -1,7 +1,7 @@
 import { AuthService } from './services/authservice.js';
 import Navbar from './views/navbar.js';
 
-// Definição das rotas e seus níveis de acesso
+// 1. Adicionado a rota partnerhub
 const routes = {
     '#/': { view: () => import('./views/mapview.js'), private: true },
     '#/login': { view: () => import('./views/loginview.js'), private: false },
@@ -12,34 +12,44 @@ const routes = {
     '#/edit-hangar': { view: () => import('./views/edithangarview.js'), private: true },
     '#/reserva': { view: () => import('./views/reservaview.js'), private: true },
     '#/hangar': { view: () => import('./views/hangarview.js'), private: true },
-    '#/pilothub': { view: () => import('./views/pilothub.js'), private: true },
+    '#/pilothub': { view: () => import('./views/pilothubview.js'), private: true },
+    '#/partners': { view: () => import('./views/partnerhubview.js'), private: true }, // Rota corrigida
+    '#/myreserve': { view: () => import('./views/myreserveview.js'), private: true },
 };
 
 const app = document.getElementById("app-viewport");
 
 function getPath() {
-    const hash = window.location.hash || "#/";
-    return hash.split('?')[0];
+    const hash = window.location.hash || '#/';
+    return hash.split('?')[0]; 
 }
 
-async function loadRoute() {
+async function router() {
     const path = getPath();
     const route = routes[path];
     const user = AuthService.getUser();
 
-    // 1. Fallback para rotas inexistentes: manda para home ou login
+    // --- FIREWALL DE SEGURANÇA E ROLES ---
+
+    // 1. Se a rota não existe, volta pro mapa
     if (!route) {
-        window.location.hash = user ? "#/" : "#/login";
+        window.location.hash = "#/";
         return;
     }
 
-    // 2. Proteção de rota privada: se não houver usuário, vai para login
+    // 2. Se for privada e não estiver logado, vai pro login
     if (route.private && !user) {
         window.location.hash = "#/login";
         return;
     }
 
-    // 3. Bloqueio de Login/Register para usuários já autenticados
+    // 3. BLOQUEIO PARA PARCEIROS: Se for parceiro, só pode acessar #/partnerhub
+    if (user?.role === 'parceiro' && path !== '#/partners') {
+        window.location.hash = "#/partners";
+        return;
+    }
+
+    // 4. Bloqueio de Login/Register para quem já está logado
     if (user && (path === "#/login" || path === "#/register")) {
         window.location.hash = "#/";
         return;
@@ -49,34 +59,27 @@ async function loadRoute() {
         const module = await route.view();
         const view = module.default;
 
-        // Renderiza a View no container principal
         app.innerHTML = await view.render();
-
-        // Gerencia a exibição da Navbar baseada no login
         renderNavbar(user);
 
-        // Executa lógica pós-renderização (event listeners, etc)
         if (view.after_render) {
             await view.after_render();
         }
 
     } catch (err) {
         console.error("Router error:", err);
-        app.innerHTML = `<div style="padding:20px;color:red;">Erro ao carregar página</div>`;
+        app.innerHTML = `<div style="padding:20px;color:red;">Erro ao carregar página. Certifique-se que o arquivo existe.</div>`;
     }
 }
 
 function renderNavbar(user) {
     let navContainer = document.getElementById('main-nav');
-    
-    // Cria o container da navbar se ele não existir no HTML
     if (!navContainer) {
         navContainer = document.createElement('div');
         navContainer.id = 'main-nav';
         document.body.appendChild(navContainer);
     }
 
-    // Só exibe a Navbar para usuários logados
     if (user) {
         navContainer.innerHTML = Navbar.render();
         Navbar.after_render();
@@ -85,9 +88,7 @@ function renderNavbar(user) {
     }
 }
 
-// Ouve mudanças na URL para trocar de página
-window.addEventListener("hashchange", loadRoute);
+window.addEventListener("hashchange", router);
+window.addEventListener("load", router);
 
-export function router() {
-    loadRoute();
-}
+export { router };

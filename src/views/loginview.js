@@ -11,11 +11,11 @@ export default {
                     </div>
                     <div style="display: grid; gap: 20px;">
                         <div class="input-block">
-                            <label class="field-label" style="font-size: 0.75rem; font-weight: 800; color: #94a3b8;">E-MAIL</label>
+                            <label class="field-label" style="font-size: 0.75rem; font-weight: 800; color: #1e293b;">E-MAIL</label>
                             <input type="email" id="login-email" class="input-field-light" placeholder="seu@email.com" autocomplete="email" />
                         </div>
                         <div class="input-block">
-                            <label class="field-label" style="font-size: 0.75rem; font-weight: 800; color: #94a3b8;">SENHA</label>
+                            <label class="field-label" style="font-size: 0.75rem; font-weight: 800; color: #1e293b;">SENHA</label>
                             <input type="password" id="login-password" class="input-field-light" placeholder="••••••••" autocomplete="current-password" />
                         </div>
                         <button id="btnLogin" class="btn-primary-emerald-bold" style="height: 50px;">ENTRAR NO HANGAR</button>

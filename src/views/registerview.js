@@ -32,6 +32,7 @@ const RegisterView = {
                             <option value="">Selecione o tipo</option>
                             <option value="admin_hangar">Administrador de Hangar</option>
                             <option value="piloto">Piloto</option>
+                            <option value="parceiro">Parceiro</option>
                         </select>
                     </div>
 

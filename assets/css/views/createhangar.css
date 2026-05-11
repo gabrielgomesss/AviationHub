@@ -42,11 +42,7 @@
 
 /* Indicador de arraste */
 .bottom-sheet-handle {
-    width: 45px;
-    height: 5px;
-    background: #e2e8f0;
-    border-radius: 10px;
-    margin: -5px auto 25px auto;
+    margin: 0px 0 7% 0;
 }
 
 /* Estilização de Formulários e Textos */

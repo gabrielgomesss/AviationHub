@@ -2,26 +2,31 @@ import { AuthService } from '../services/authservice.js';
 import { PartnerService } from '../services/partnerservice.js';
 
 const PartnerHub = {
-state: {
-        activeTab: 'meu-perfil',
+    state: {
+        activeTab: 'lista-pilotos',
         pilotos: [],
         selectedPilot: null,
         tempPhotoBase64: null,
-        isProfileActive: true // Estado local do toggle
+        isProfileActive: true 
     },
 
     render: async () => {
         const user = AuthService.getUser();
         if (!user) return `<div class="error-state-light">Usuário não autenticado.</div>`;
 
+        const isPartner = user.role === 'parceiro';
+
+        if (!isPartner && PartnerHub.state.activeTab === 'meu-perfil') {
+            PartnerHub.state.activeTab = 'lista-pilotos';
+        }
+
         let content = '';
 
-        if (PartnerHub.state.activeTab === 'meu-perfil') {
+        if (PartnerHub.state.activeTab === 'meu-perfil' && isPartner) {
             const profile = await PartnerService.getPartnerProfile(user.uid) || {};
             PartnerHub.state.isProfileActive = profile.active !== undefined ? profile.active : true;
             content = PartnerHub.renderPerfil(profile, user);
         } else if (PartnerHub.state.activeTab === 'lista-pilotos') {
-            // Busca e filtra apenas parceiros ativos
             const allPartners = await PartnerService.getAllPartners() || [];
             PartnerHub.state.pilotos = allPartners.filter(p => p.active === true);
             content = PartnerHub.renderLista();
@@ -29,37 +34,53 @@ state: {
             content = PartnerHub.renderDetalhes(PartnerHub.state.selectedPilot);
         }
 
+        // Define a ação do botão de voltar do header
+        const isOnSubPage = PartnerHub.state.activeTab === 'meu-perfil' || PartnerHub.state.activeTab === 'detalhes';
+        const backAction = isOnSubPage ? "id='header-back-to-list'" : "onclick='window.history.back()'";
+
         return `
             <div id="app-navbar"></div>
             <div class="hangar-detail-page-light">
                 <div class="hangar-view-container-light">
-                    <div class="page-header-block" style="text-align: center; margin-bottom: 25px;">
-                        <h2 style="font-size: 2rem;">PartnetHub</h2>
-                        <p class="subtitle-light">Conectando a Aviação</p>
+                    
+                    <div style="padding: 15px 20px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; min-height: 70px; background: white; border-radius: 20px 20px 0 0;">
+                        <button ${backAction} style="background: #f1f5f9; border: none; width: 45px; height: 45px; border-radius: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #1e293b; margin-right: 15px;">
+                            <span class="material-symbols-outlined" style="font-weight: 800;">
+                                <svg width="16" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M15 18l-6-6 6-6"/>
+                                </svg>
+                            </span>
+                        </button>
+                        <div>
+                            <h2 style="font-size: 1.2rem; margin: 0; color: #1e293b; font-weight: 800;">PartnerHub</h2>
+                            <p style="margin: 0; font-size: 0.8rem; color: #64748b; font-weight: 600;">Conectando a Aviação</p>
+                        </div>
                     </div>
 
-                    ${PartnerHub.state.activeTab !== 'detalhes' ? `
-                        <div class="tabs-navigation" style="display: flex; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid #e2e8f0; justify-content: center;">
-                            <button id="btn-tab-perfil" class="tab-btn" 
-                                    style="padding: 12px 20px; border: none; background: transparent; font-weight: 800; cursor: pointer;
-                                    color: ${PartnerHub.state.activeTab === 'meu-perfil' ? '#10b981' : '#94a3b8'};
-                                    border-bottom: 3px solid ${PartnerHub.state.activeTab === 'meu-perfil' ? '#10b981' : 'transparent'};">
-                                MEU PERFIL
-                            </button>
-                            <button id="btn-tab-lista" class="tab-btn" 
-                                    style="padding: 12px 20px; border: none; background: transparent; font-weight: 800; cursor: pointer;
-                                    color: ${PartnerHub.state.activeTab === 'lista-pilotos' ? '#10b981' : '#94a3b8'};
-                                    border-bottom: 3px solid ${PartnerHub.state.activeTab === 'lista-pilotos' ? '#10b981' : 'transparent'};">
-                                EXPLORAR
-                            </button>
-                        </div>
-                    ` : `
-                        <button id="btn-back-hub" style="margin-bottom:20px; border:none; background:#f1f5f9; padding:8px 15px; border-radius:12px; font-weight:700; color:#64748b; cursor:pointer; display:flex; align-items:center; gap:8px;">
-                           <span>←</span> Voltar
-                        </button>
-                    `}
+                    <div style="padding: 20px;">
+                        ${PartnerHub.state.activeTab !== 'detalhes' ? `
+                            <div class="tabs-navigation" style="display: flex; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid #e2e8f0; justify-content: center;">
+                                
+                                ${isPartner ? `
+                                    <button id="btn-tab-perfil" class="tab-btn" 
+                                            style="padding: 12px 20px; border: none; background: transparent; font-weight: 800; cursor: pointer;
+                                            color: ${PartnerHub.state.activeTab === 'meu-perfil' ? '#10b981' : '#94a3b8'};
+                                            border-bottom: 3px solid ${PartnerHub.state.activeTab === 'meu-perfil' ? '#10b981' : 'transparent'};">
+                                        Meu perfil
+                                    </button>
+                                ` : ''}
 
-                    <div id="tab-content">${content}</div>
+                                <button id="btn-tab-lista" class="tab-btn" 
+                                        style="padding: 12px 20px; border: none; background: transparent; font-weight: 800; cursor: pointer;
+                                        color: ${PartnerHub.state.activeTab === 'lista-pilotos' ? '#10b981' : '#94a3b8'};
+                                        border-bottom: 3px solid ${PartnerHub.state.activeTab === 'lista-pilotos' ? '#10b981' : 'transparent'};">
+                                    Lista de parceiros
+                                </button>
+                            </div>
+                        ` : ''}
+
+                        <div id="tab-content">${content}</div>
+                    </div>
                 </div>
             </div>
         `;
@@ -125,7 +146,7 @@ state: {
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <img src="${p.photoURL || 'https://via.placeholder.com/50'}" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover;">
                         <div style="flex: 1;">
-                            <h4 style="margin:0; color:white; font-weight: 800;">${p.displayName || 'Piloto'}</h4>
+                            <h4 style="margin:0; color:white; font-weight: 800;">${p.displayName || 'Parceiro'}</h4>
                         </div>
                         <span style="color: #cbd5e1;">➔</span>
                     </div>
@@ -160,9 +181,14 @@ state: {
     `},
 
     after_render: async () => {
+        // Listener para a seta de voltar no header (apenas quando em sub-páginas)
+        document.getElementById('header-back-to-list')?.addEventListener('click', () => {
+            PartnerHub.state.activeTab = 'lista-pilotos';
+            PartnerHub.refresh();
+        });
+
         document.getElementById('btn-tab-perfil')?.addEventListener('click', () => { PartnerHub.state.activeTab = 'meu-perfil'; PartnerHub.refresh(); });
         document.getElementById('btn-tab-lista')?.addEventListener('click', () => { PartnerHub.state.activeTab = 'lista-pilotos'; PartnerHub.refresh(); });
-        document.getElementById('btn-back-hub')?.addEventListener('click', () => { PartnerHub.state.activeTab = 'lista-pilotos'; PartnerHub.refresh(); });
 
         document.querySelectorAll('.pilot-card-click').forEach(card => {
             card.onclick = () => {
@@ -186,7 +212,6 @@ state: {
             }
         });
 
-        // Toggle listener
         const activeToggle = document.getElementById('pilot-active-toggle');
         if (activeToggle) {
             activeToggle.onchange = (e) => {
@@ -206,7 +231,7 @@ state: {
                     whatsapp: document.getElementById('pilot-whatsapp').value,
                     aircraftExperience: document.getElementById('pilot-experience').value,
                     photoURL: PartnerHub.state.tempPhotoBase64 || document.getElementById('profile-preview').src,
-                    active: PartnerHub.state.isProfileActive // NOVO CAMPO
+                    active: PartnerHub.state.isProfileActive
                 };
 
                 try {

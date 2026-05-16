@@ -1,4 +1,4 @@
-import Navbar from '../views/navbar.js';
+import Navbar from '../../components/navbar.js';
 import { HangarService } from '../services/hangarservice.js';
 
 const HangarView = {

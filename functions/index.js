@@ -3,11 +3,72 @@ const admin = require("firebase-admin");
 const { FieldValue } = require("firebase-admin/firestore");
 const https = require("https");
 
+
 if (!admin.apps.length) {
     admin.initializeApp();
 }
 
 const db = admin.firestore();
+
+
+// STRIPE
+const PLANS = {
+    parceiro: 'price_1TWZBkFBlnWfYBlqNyEbjvdZ', 
+    piloto: 'price_1TWZCQFBlnWfYBlqm7iiDCvK',     
+    admin_hangar: 'price_1TWZCQFBlnWfYBlqm7iiDCvK'     
+};
+
+exports.createStripeCheckout = onCall({ 
+    cors: true, // Isso resolve o erro de CORS se a função carregar com sucesso
+    region: "us-central1",
+    secrets: ["STRIPE_SECRET_KEY"]
+}, async (request) => {
+    const { email, role } = request.data || {};
+    
+    if (!email || !role) {
+        throw new HttpsError("invalid-argument", "Email e Role são obrigatórios.");
+    }
+
+    try {
+        const stripeSecret = process.env.STRIPE_SECRET_KEY;
+        const stripe = require('stripe')(stripeSecret);
+        const session = await stripe.checkout.sessions.create({
+            customer_email: email.trim().toLowerCase(),
+            payment_method_types: ['card'],
+            line_items: [{
+                price: PLANS[role],
+                quantity: 1,
+            }],
+            mode: 'subscription',
+            // URLs de retorno (ajustadas para o seu ambiente local conforme o log)
+            success_url: 'https://aviationhub1.netlify.app/#/payment-success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url: 'https://aviationhub1.netlify.app/#/register',
+            // success_url: 'http://127.0.0.1:5501/#/payment-success?session_id={CHECKOUT_SESSION_ID}',
+            // cancel_url: 'http://127.0.0.1:5501/#/register',
+        });
+
+        return { url: session.url };
+    } catch (error) {
+        console.error("Erro no Stripe:", error);
+        throw new HttpsError("internal", error.message);
+    }
+});
+
+// Mantendo as outras funções (savePartnerProfile, etc)
+exports.savePartnerProfile = onCall({ cors: true }, async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Acesso negado.");
+    const { userId, profileData } = request.data || {};
+    try {
+        await db.collection("users").doc(userId).set({
+            ...profileData,
+            lastUpdate: FieldValue.serverTimestamp(),
+            uid: userId 
+        }, { merge: true });
+        return { success: true };
+    } catch (e) {
+        throw new HttpsError("internal", e.message);
+    }
+});
 
 /**
  * Helper para realizar chamadas de API externas usando o módulo nativo HTTPS.
@@ -42,12 +103,11 @@ exports.getWeather = onCall({ cors: true }, async (request) => {
     const { icao } = request.data || {};
     if (!icao) throw new HttpsError("invalid-argument", "O código ICAO é obrigatório.");
 
-    const API_KEY = "dbc89fb291f74509bc11b23786fa2f86";
     const cleanIcao = icao.toUpperCase().trim();
 
     try {
         const stationUrl = `https://api.checkwx.com/station/${cleanIcao}`;
-        const stationResult = await fetchFromCheckWX(stationUrl, API_KEY);
+        const stationResult = await fetchFromCheckWX(stationUrl, process.env.CHECKWX_API_KEY);
 
         if (!stationResult.data || stationResult.data.length === 0) {
             throw new HttpsError("not-found", `Aeródromo ${cleanIcao} não encontrado.`);
@@ -72,7 +132,7 @@ exports.getWeather = onCall({ cors: true }, async (request) => {
         let metar = "METAR não disponível no momento.";
         try {
             const metarUrl = `https://api.checkwx.com/metar/${cleanIcao}/decoded`;
-            const metarResult = await fetchFromCheckWX(metarUrl, API_KEY);
+            const metarResult = await fetchFromCheckWX(metarUrl, process.env.CHECKWX_API_KEY);
             if (metarResult.data && metarResult.data.length > 0) {
                 metar = metarResult.data[0].raw_text;
             }
@@ -155,32 +215,41 @@ exports.createHangarWithLink = onCall({ cors: true }, async (request) => {
 // ======================================================
 // 4. CRIAR RESERVA (Atualizada com nomeUsuario)
 // ======================================================
-exports.createReserva = onCall({ cors: true }, async (request) => {
+
+exports.createReserva = onCall({ cors: true, region: "us-central1" }, async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Acesso negado.");
     
     try {
-<<<<<<< HEAD
-        // Busca os dados do usuário para pegar o nome
-=======
->>>>>>> adição de módulos, ajustes de layout e inclusão de RDN em reservas - Stable
         const userDoc = await db.collection("users").doc(request.auth.uid).get();
         const userData = userDoc.data();
-        const nomeUsuario = userData ? userData.display_name : "Usuário Desconhecido";
+        
+        // Garante a recuperação do nome usando fallback seguro para não gerar undefined
+        const nomeUsuario = userData ? (userData.display_name || userData.displayName || "Usuário Desconhecido") : "Usuário Desconhecido";
+
+        // Remove dinamicamente qualquer propriedade 'undefined' enviada pelo formulário frontend
+        const dadosSanitizados = {};
+        if (request.data) {
+            Object.keys(request.data).forEach(key => {
+                if (request.data[key] !== undefined) {
+                    dadosSanitizados[key] = request.data[key];
+                } else {
+                    dadosSanitizados[key] = ""; // Substitui por string vazia para aceitação no Firestore
+                }
+            });
+        }
 
         const rRef = db.collection("reservas").doc();
         await rRef.set({
-            ...request.data,
+            ...dadosSanitizados,
             clienteId: request.auth.uid,
-<<<<<<< HEAD
-            nomeUsuario: nomeUsuario, // Salvando o nome de quem reservou
-=======
             nomeUsuario: nomeUsuario,
->>>>>>> adição de módulos, ajustes de layout e inclusão de RDN em reservas - Stable
             status: "pendente",
             createdAt: FieldValue.serverTimestamp()
         });
+        
         return { id: rRef.id, success: true };
     } catch (e) {
+        console.error("Erro interno ao salvar reserva no Firestore:", e);
         throw new HttpsError("internal", e.message);
     }
 });
@@ -220,6 +289,8 @@ exports.updateReservaStatus = onCall({ cors: true }, async (request) => {
         await db.collection("reservas").doc(id).update({
             status: status,
             msgAdmin: msgAdmin || "",
+            lida: false, // <--- MUITO IMPORTANTE: Isso ativa a bolinha vermelha no front do piloto
+            lidaPeloPiloto: false,
             updatedAt: FieldValue.serverTimestamp()
         });
         return { success: true };
@@ -357,6 +428,79 @@ exports.getAllPartners = onCall({ cors: true }, async (request) => {
             
         return snapshot.docs.map(doc => doc.data());
     } catch (e) {
+        throw new HttpsError("internal", e.message);
+    }
+});
+
+// ======================================================
+// NOTIFICAÇÕES: RESERVAS PENDENTES (PARA ADMIN)
+// ======================================================
+exports.getPendingReservationsCount = onCall({ cors: true }, async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Acesso negado.");
+    
+    try {
+        const snapshot = await db.collection("reservas")
+            .where("hangarId", "==", request.data.hangarId)
+            .where("status", "==", "pendente")
+            .get();
+            
+        return { count: snapshot.size };
+    } catch (e) {
+        throw new HttpsError("internal", e.message);
+    }
+});
+
+// ======================================================
+// NOTIFICAÇÕES: ATUALIZAÇÕES PARA O PILOTO
+// ======================================================
+exports.getPilotNotificationCount = onCall({ cors: true }, async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Acesso negado.");
+    
+    try {
+        // Busca reservas do piloto que não estão mais como 'pendente' 
+        // e que ele ainda não "visualizou" (exemplo de lógica)
+        const snapshot = await db.collection("reservas")
+            .where("pilotoId", "==", request.auth.uid)
+            .where("status", "in", ["aprovada", "recusada"])
+            .where("lidaPeloPiloto", "==", false)
+            .get();
+            
+        return { count: snapshot.size };
+    } catch (e) {
+        throw new HttpsError("internal", e.message);
+    }
+});
+// ======================================================
+// 11. MARCAR NOTIFICAÇÕES DO PILOTO COMO LIDAS
+// ======================================================
+exports.marcarReservasComoLidas = onCall({ cors: true, region: "us-central1" }, async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Acesso negado.");
+    
+    try {
+        // Busca todas as reservas do piloto que precisam ser limpas
+        const snapshot = await db.collection("reservas")
+            .where("clienteId", "==", request.auth.uid)
+            .where("lida", "==", false)
+            .where("status", "in", ["aprovada", "recusada", "aprovado", "recusado"])
+            .get();
+
+        if (snapshot.empty) {
+            return { success: true, updated: 0 };
+        }
+
+        const batch = db.batch();
+
+        snapshot.forEach(doc => {
+            batch.update(doc.ref, { 
+                lida: true,
+                lidaPeloPiloto: true 
+            });
+        });
+
+        await batch.commit();
+        return { success: true, updated: snapshot.size };
+    } catch (e) {
+        console.error("Erro na Cloud Function marcarReservasComoLidas:", e);
         throw new HttpsError("internal", e.message);
     }
 });

@@ -3,25 +3,32 @@ import { PilotService } from '../services/pilothubservice.js';
 
 const PilotHub = {
     state: {
-        activeTab: 'meu-perfil',
+        activeTab: 'lista-pilotos', // Padrão lista para evitar erro em não-pilotos
         pilotos: [],
         selectedPilot: null,
         tempPhotoBase64: null,
-        isProfileActive: true // Estado local do toggle
+        isProfileActive: true 
     },
 
     render: async () => {
         const user = AuthService.getUser();
         if (!user) return `<div class="error-state-light">Usuário não autenticado.</div>`;
 
+        // Verifica se é piloto para permissão de aba de perfil
+        const isPilot = user.role === 'piloto';
+
+        // Segurança: se um não-piloto tentar entrar na aba de perfil, joga para a lista
+        if (!isPilot && PilotHub.state.activeTab === 'meu-perfil') {
+            PilotHub.state.activeTab = 'lista-pilotos';
+        }
+
         let content = '';
 
-        if (PilotHub.state.activeTab === 'meu-perfil') {
+        if (PilotHub.state.activeTab === 'meu-perfil' && isPilot) {
             const profile = await PilotService.getPilotProfile(user.uid) || {};
             PilotHub.state.isProfileActive = profile.active !== undefined ? profile.active : true;
             content = PilotHub.renderPerfil(profile, user);
         } else if (PilotHub.state.activeTab === 'lista-pilotos') {
-            // Busca e filtra apenas pilotos ativos
             const allPilots = await PilotService.getAllPilots() || [];
             PilotHub.state.pilotos = allPilots.filter(p => p.active === true);
             content = PilotHub.renderLista();
@@ -29,37 +36,55 @@ const PilotHub = {
             content = PilotHub.renderDetalhes(PilotHub.state.selectedPilot);
         }
 
+        // Ação da seta superior: Volta para lista se estiver em sub-páginas, senão volta histórico
+        const isOnSubPage = PilotHub.state.activeTab === 'meu-perfil' || PilotHub.state.activeTab === 'detalhes';
+        const backAction = isOnSubPage ? "id='header-back-to-list'" : "onclick='window.history.back()'";
+
         return `
             <div id="app-navbar"></div>
             <div class="hangar-detail-page-light">
                 <div class="hangar-view-container-light">
-                    <div class="page-header-block" style="text-align: center; margin-bottom: 25px;">
-                        <h2 style="font-size: 2rem;">PilotHub</h2>
-                        <p class="subtitle-light">Conectando a Aviação</p>
+                    
+                    <div style="padding: 15px 20px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; min-height: 70px; background: white; border-radius: 20px 20px 0 0;">
+                        <button ${backAction} style="background: #f1f5f9; border: none; width: 45px; height: 45px; border-radius: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #1e293b; margin-right: 15px;">
+                            <span class="material-symbols-outlined" style="font-weight: 800;">
+                                <svg width="16" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M15 18l-6-6 6-6"/>
+                                </svg>
+                            </span>
+                        </button>
+                        <div>
+                            <h2 style="font-size: 1.2rem; margin: 0; color: #1e293b; font-weight: 800;">PilotHub</h2>
+                            <p style="margin: 0; font-size: 0.8rem; color: #64748b; font-weight: 600;">Conectando a Aviação</p>
+                        </div>
                     </div>
 
-                    ${PilotHub.state.activeTab !== 'detalhes' ? `
-                        <div class="tabs-navigation" style="display: flex; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid #e2e8f0; justify-content: center;">
-                            <button id="btn-tab-perfil" class="tab-btn" 
-                                    style="padding: 12px 20px; border: none; background: transparent; font-weight: 800; cursor: pointer;
-                                    color: ${PilotHub.state.activeTab === 'meu-perfil' ? '#10b981' : '#94a3b8'};
-                                    border-bottom: 3px solid ${PilotHub.state.activeTab === 'meu-perfil' ? '#10b981' : 'transparent'};">
-                                MEU PERFIL
-                            </button>
-                            <button id="btn-tab-lista" class="tab-btn" 
-                                    style="padding: 12px 20px; border: none; background: transparent; font-weight: 800; cursor: pointer;
-                                    color: ${PilotHub.state.activeTab === 'lista-pilotos' ? '#10b981' : '#94a3b8'};
-                                    border-bottom: 3px solid ${PilotHub.state.activeTab === 'lista-pilotos' ? '#10b981' : 'transparent'};">
-                                EXPLORAR
-                            </button>
-                        </div>
-                    ` : `
-                        <button id="btn-back-hub" style="margin-bottom:20px; border:none; background:#f1f5f9; padding:8px 15px; border-radius:12px; font-weight:700; color:#64748b; cursor:pointer; display:flex; align-items:center; gap:8px;">
-                           <span>←</span> Voltar
-                        </button>
-                    `}
+                    <div style="padding: 20px;">
+                        ${PilotHub.state.activeTab !== 'detalhes' ? `
+                            <div class="tabs-navigation" style="display: flex; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid #e2e8f0; justify-content: center;">
+                                
+                                ${isPilot ? `
+                                    <button id="btn-tab-perfil" class="tab-btn" 
+                                            style="padding: 12px 20px; border: none; background: transparent; font-weight: 800; cursor: pointer;
+                                            color: ${PilotHub.state.activeTab === 'meu-perfil' ? '#10b981' : '#94a3b8'};
+                                            border-bottom: 3px solid ${PilotHub.state.activeTab === 'meu-perfil' ? '#10b981' : 'transparent'};">
+                                        MEU PERFIL
+                                    </button>
+                                ` : ''}
 
-                    <div id="tab-content">${content}</div>
+                                <button id="btn-tab-lista" class="tab-btn" 
+                                        style="padding: 12px 20px; border: none; background: transparent; font-weight: 800; cursor: pointer;
+                                        color: ${PilotHub.state.activeTab === 'lista-pilotos' ? '#10b981' : '#94a3b8'};
+                                        border-bottom: 3px solid ${PilotHub.state.activeTab === 'lista-pilotos' ? '#10b981' : 'transparent'};">
+                                    Lista de pilotos
+                                </button>
+                            </div>
+                        ` : `
+                            
+                        `}
+
+                        <div id="tab-content">${content}</div>
+                    </div>
                 </div>
             </div>
         `;
@@ -169,9 +194,20 @@ const PilotHub = {
     `},
 
     after_render: async () => {
+        // Listener para seta superior do Header
+        document.getElementById('header-back-to-list')?.addEventListener('click', () => {
+            PilotHub.state.activeTab = 'lista-pilotos';
+            PilotHub.refresh();
+        });
+
         document.getElementById('btn-tab-perfil')?.addEventListener('click', () => { PilotHub.state.activeTab = 'meu-perfil'; PilotHub.refresh(); });
         document.getElementById('btn-tab-lista')?.addEventListener('click', () => { PilotHub.state.activeTab = 'lista-pilotos'; PilotHub.refresh(); });
-        document.getElementById('btn-back-hub')?.addEventListener('click', () => { PilotHub.state.activeTab = 'lista-pilotos'; PilotHub.refresh(); });
+        
+        // Listener para o botão de voltar interno (que aparece nos Detalhes)
+        document.getElementById('btn-back-hub-internal')?.addEventListener('click', () => { 
+            PilotHub.state.activeTab = 'lista-pilotos'; 
+            PilotHub.refresh(); 
+        });
 
         document.querySelectorAll('.pilot-card-click').forEach(card => {
             card.onclick = () => {
@@ -195,7 +231,6 @@ const PilotHub = {
             }
         });
 
-        // Toggle listener
         const activeToggle = document.getElementById('pilot-active-toggle');
         if (activeToggle) {
             activeToggle.onchange = (e) => {
@@ -217,7 +252,7 @@ const PilotHub = {
                     whatsapp: document.getElementById('pilot-whatsapp').value,
                     aircraftExperience: document.getElementById('pilot-experience').value,
                     photoURL: PilotHub.state.tempPhotoBase64 || document.getElementById('profile-preview').src,
-                    active: PilotHub.state.isProfileActive // NOVO CAMPO
+                    active: PilotHub.state.isProfileActive
                 };
 
                 try {

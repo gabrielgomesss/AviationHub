@@ -47,11 +47,6 @@ const HangarDashboardView = {
                              <button id="btnAprovar" style="padding:18px; border-radius:22px; border:none; background:#10b981; color:white; font-weight:800; cursor:pointer; font-size: 0.95rem; box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4); transition: all 0.2s;">APROVAR</button>
                         </div>
                     </div>
-<<<<<<< HEAD
-                    <button onclick="document.getElementById('modalDetalhes').style.display='none'" style="width:100%; margin-top:15px; background:none; border:none; color:#94a3b8; cursor:pointer; font-weight:500; font-size:0.9rem;">Voltar</button>
-                    
-=======
->>>>>>> adição de módulos, ajustes de layout e inclusão de RDN em reservas - Stable
                 </div>
             </div>
 
@@ -127,10 +122,10 @@ const HangarDashboardView = {
         }
 
         content.innerHTML = reservas.map(r => {
-            const statusColor = r.status === 'aprovado' ? '#10b981' : r.status === 'recusado' ? '#ef4444' : '#f59e0b';
+            const statusColor = r.status === 'aprovado' || r.status === 'aprovada' ? '#10b981' : r.status === 'recusado' || r.status === 'recusada' ? '#ef4444' : '#f59e0b';
             const valorParaMostrar = (r.valorExibicao && r.valorExibicao.toLowerCase().includes("combinar") || parseFloat(r.valorExibicao) === 0)
                 ? '<span style="color:#10b981; font-weight:800;">A combinar</span>'
-                : `<span style="font-weight:800; color:#FFF;">R$ ${r.valorExibicao || '0,00'}</span>`;
+                : `<span style="font-weight:800; color:#FFF;">${r.valorExibicao || '0,00'}</span>`;
 
             return `
                 <div class="reserva-item" onclick="window.showReservaDetails('${r.id}')" style="background:#0f172a; padding:20px; border-radius:24px; border:1px solid #f1f5f9; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; transition: 0.2s;">
@@ -139,7 +134,7 @@ const HangarDashboardView = {
                             <div style="width:8px; height:8px; border-radius:50%; background:${statusColor};"></div>
                             <span style="font-size:0.65rem; font-weight:800; color:#64748b; text-transform:uppercase;">${r.status}</span>
                         </div>
-                        <div style="font-size: 1rem; color:white; margin-top:2px; font-weight:800;">${r.prefixo || 'N/I'} • ${r.dataEntrada}</div>
+                        <div style="font-size: 1rem; color:white; margin-top:2px; font-weight:800;">${r.prefixo || r.matricula || 'N/I'} • ${r.dataEntrada}</div>
                         <span style="color:#999; font-size:0.8rem; font-weight:700;">${r.pilotoNome || 'Piloto'}</span>
                     </div>
                     <div style="text-align:right;">${valorParaMostrar}</div>
@@ -150,45 +145,22 @@ const HangarDashboardView = {
         window.showReservaDetails = (id) => this.showModal(id);
     },
 
-    showModal(id) {
+showModal(id) {
         const r = currentReservas.find(item => item.id === id);
         if (!r) return;
 
         const modal = document.getElementById("modalDetalhes");
-<<<<<<< HEAD
-        
-        // Mapeamento Flexível: Tenta encontrar o dado independente do nome do campo no Firebase
-        const piloto = r.nomeUsuario || r.nomeUsuario || r.nome || 'Não informado';
-        const aeronave = r.prefixo || r.prefixoAviao || 'S/P';
-        const dIn = r.dataEntrada || r.dataEntrada || '--/--/--';
-        const dOut = r.dataSaida || r.dataSaida || '--/--/--';
-        const valor = Number(r.valorFinal || r.valorTotal || 0);
-        const modelo = r.modelo || r.modelo || 'Não informado';
-        const seguro = r.possuiSeguro ? "Sim" : "Não";
-        document.getElementById("modalBody").innerHTML = `
-            <div style="text-align:center; margin-bottom:20px;">
-            <button onclick="document.getElementById('modalDetalhes').style.display='none'" style="width:100%; margin-top:15px; background:none; border:none; color:#94a3b8; cursor:pointer; font-weight:500; font-size:0.9rem;">Voltar</button>
-                <h2 style="margin:0; color:#0f172a; font-size:1.8rem;">${aeronave}</h2>
-                <span style="background:#dbeafe; color:#1e40af; padding:4px 12px; border-radius:20px; font-size:0.7rem; font-weight:800; text-transform:uppercase;">${r.status}</span>
-            </div>
-
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; background:#f8fafc; padding:18px; border-radius:18px; margin-bottom:15px;">
-                <div>
-                    <label style="display:block; font-size:0.65rem; color:#94a3b8; font-weight:bold; text-transform:uppercase;">Solicitante</label>
-                    <span style="font-size:0.95rem; color:#1e293b; font-weight:600;">${piloto}</span>
-=======
         const body = document.getElementById("modalBody");
         const valorModal = (r.valorExibicao && r.valorExibicao.toLowerCase().includes("combinar") || parseFloat(r.valorExibicao) === 0)
-            ? 'Valor a combinar' : `R$ ${r.valorExibicao || '0,00'}`;
+            ? 'Valor a combinar' : `${r.valorExibicao || '0,00'}`;
 
         body.innerHTML = `
             <div style="margin-bottom:30px;">
                 <div style="display:flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                    <p style="font-size:1.5rem; color:#64748b; margin:6px 0 0 0; font-weight:600;"><strong style="color:#10b981;">${r.prefixo || 'N/A'}</strong></p>
+                        <p style="font-size:1.5rem; color:#64748b; margin:6px 0 0 0; font-weight:600;"><strong style="color:#10b981;">${r.prefixo || r.matricula || 'N/A'}</strong></p>
                         <h3 style="margin:0; color:#1e293b; font-size: 1rem; font-weight: 900; letter-spacing: -0.5px;">${r.pilotoNome || 'Piloto'}</h3>
                     </div>
->>>>>>> adição de módulos, ajustes de layout e inclusão de RDN em reservas - Stable
                 </div>
             </div>
             
@@ -196,12 +168,12 @@ const HangarDashboardView = {
                 <div style="background:#f8fafc; padding:18px; border-radius:24px; border:1px solid #f1f5f9;">
                     <label style="font-size:0.65rem; color:#94a3b8; font-weight:800; text-transform:uppercase; display:block; margin-bottom:6px;">Chegada</label>
                     <span style="font-size:1rem; color:#1e293b; font-weight:800;">${r.dataEntrada}</span>
-                    <span style="font-size:1rem; color:#1e293b; font-weight:800;">${r.horaChegada}</span>
+                    <span style="font-size:1rem; color:#1e293b; font-weight:800;">${r.horaChegada || ''}</span>
                 </div>
                 <div style="background:#f8fafc; padding:18px; border-radius:24px; border:1px solid #f1f5f9;">
                     <label style="font-size:0.65rem; color:#94a3b8; font-weight:800; text-transform:uppercase; display:block; margin-bottom:6px;">Partida</label>
                     <span style="font-size:1rem; color:#1e293b; font-weight:800;">${r.dataSaida}</span>
-                    <span style="font-size:1rem; color:#1e293b; font-weight:800;">${r.horaSaida}</span>
+                    <span style="font-size:1rem; color:#1e293b; font-weight:800;">${r.horaSaida || ''}</span>
                 </div>
             </div>
 
@@ -215,28 +187,14 @@ const HangarDashboardView = {
                 <div style="padding:22px; background:#f1f5f9; border-radius:24px; font-size:0.95rem; color:#334155; line-height:1.6; border-left: 4px solid #e2e8f0;">
                     "${r.observacoes || 'Nenhuma instrução adicional foi enviada.'}"
                 </div>
-                <div>
-                    <label style="display:block; font-size:0.65rem; color:#94a3b8; font-weight:bold; text-transform:uppercase;">Aeronave assegurada?</label>
-                    <span style="font-size:0.85rem; color:#334155;">${seguro}</span>
-                </div>
-                <div>
-                    <label style="display:block; font-size:0.65rem; color:#94a3b8; font-weight:bold; text-transform:uppercase;">Modelo da aeronave</label>
-                    <span style="font-size:0.85rem; color:#334155;">${r.modelo || r.modelo || 'Não inf.'}</span>
-                </div>
             </div>
 
-<<<<<<< HEAD
-            <div style="padding:0 5px; font-size:0.85rem; color:#64748b; border-left: 2px solid #e2e8f0; margin-left: 5px; padding-left: 12px;">
-                
-                <p style="margin:4px 0;"><strong>ID da Reserva:</strong> <span style="font-size:0.7rem; color:#cbd5e1;">${r.id}</span></p>
-=======
             <div style="margin-bottom:10px;">
                 <label style="font-size:0.65rem; color:#94a3b8; font-weight:800; text-transform:uppercase; display:block; margin-bottom:12px;">Sua Resposta (Opcional)</label>
-                <textarea id="msgAdmin" placeholder="Ex: Vaga confirmada. Procure o fiscal de pátio na chegada..." style="width:100%; height:140px; border-radius:24px; padding:20px; border:2px solid #f1f5f9; font-family: inherit; font-size: 1rem; outline: none; background: #fff;"></textarea>
->>>>>>> adição de módulos, ajustes de layout e inclusão de RDN em reservas - Stable
+                <textarea id="msgAdmin" placeholder="Ex: Vaga confirmada. Procure o fiscal de pátio na chegada..." autocomplete="off" style="width:100%; height:140px; border-radius:24px; padding:20px; border:2px solid #f1f5f9; font-family: inherit; font-size: 1rem; outline: none; background: #fff; box-sizing: border-box; resize: none;"></textarea>
             </div>
         `;
-
+    
         document.getElementById("btnAprovar").onclick = () => this.process(r.id, 'aprovado');
         document.getElementById("btnRecusar").onclick = () => this.process(r.id, 'recusado');
         
@@ -244,18 +202,30 @@ const HangarDashboardView = {
     },
 
     async process(id, status) {
-        const msg = document.getElementById("msgAdmin").value;
+        const msgAdminInput = document.getElementById("msgAdmin");
+        const msg = msgAdminInput ? msgAdminInput.value : "";
+        
         const btnA = document.getElementById("btnAprovar");
         const btnR = document.getElementById("btnRecusar");
 
         try {
-            btnA.disabled = true; btnR.disabled = true;
-            btnA.innerText = "SINCRO...";
+            // Desabilita botões e inicia feedback visual
+            btnA.disabled = true; 
+            btnR.disabled = true;
+            btnA.innerText = "Enviando...";
+            
+            // Invoca a Cloud Function
             await DashboardService.updateReservaStatus(id, status, msg);
+            
+            // Fecha o modal imediatamente após o retorno positivo
             document.getElementById("modalDetalhes").style.display = "none";
         } catch (error) {
-            console.error(error);
-            btnA.disabled = false; btnR.disabled = false;
+            console.error("Erro ao processar status da reserva:", error);
+            alert("Não foi possível atualizar o status. Tente novamente.");
+            
+            // Restaura o estado original dos botões em caso de falha
+            btnA.disabled = false; 
+            btnR.disabled = false;
             btnA.innerText = "APROVAR";
         }
     }

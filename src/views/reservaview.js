@@ -258,16 +258,9 @@ export default {
                         servicos: servicosSelecionados,
                         possuiSeguro: document.getElementById("possuiSeguro").checked,
                         observacoes: document.getElementById("observacoes").value,
-<<<<<<< HEAD
-                        modelo: document.getElementById("Modelo").value,
-                        // CAMPO ADICIONADO PARA O BANCO DE DADOS
-                        valorTotal: valorTotalSalvar 
-                    };
-=======
                         valorTotal: document.getElementById("precoTotal").innerText,
                         status: "pendente"
                     });
->>>>>>> adição de módulos, ajustes de layout e inclusão de RDN em reservas - Stable
 
                     alert("Reserva enviada com sucesso!");
                     window.location.hash = "#/";

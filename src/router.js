@@ -15,6 +15,7 @@ const routes = {
     '#/pilothub': { view: () => import('./views/pilothubview.js'), private: true },
     '#/partners': { view: () => import('./views/partnerhubview.js'), private: true }, // Rota corrigida
     '#/myreserve': { view: () => import('./views/myreserveview.js'), private: true },
+    '#/payment-success': { view: () => import('./views/paymentsuccess.js'), private: false },
 };
 
 const app = document.getElementById("app-viewport");

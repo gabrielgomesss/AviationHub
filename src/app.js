@@ -1,4 +1,4 @@
-import { router } from './router.js';
+import {router} from './router.js';
 import { AuthService } from './services/authservice.js';
 
 window.addEventListener('load', async () => {
